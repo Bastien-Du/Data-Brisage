@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Data Mafia Brisage - Bilan & Stats</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white p-6">
+    <div class="max-w-7xl mx-auto space-y-6">
+        
+        <!-- En-tête centré + Navigation -->
+        <div class="bg-gray-800 p-4 rounded-lg border border-amber-500/30 text-center space-y-3">
+            <h1 class="text-3xl font-bold text-amber-400">Data Mafia Brisage</h1>
+            <nav class="flex justify-center gap-2">
+                <a href="/" class="bg-gray-700 hover:bg-gray-600 text-amber-300 font-bold px-4 py-2 rounded-lg text-sm transition">
+                    📝 Saisie & Historique
+                </a>
+                <a href="/bilan" class="bg-amber-500 text-gray-900 font-bold px-4 py-2 rounded-lg text-sm transition">
+                    📊 Bilan & Stats
+                </a>
+                <a href="/items" class="bg-gray-700 hover:bg-gray-600 text-amber-300 font-bold px-4 py-2 rounded-lg text-sm transition">
+                    📦 Historique par Item
+                </a>
+            </nav>
+        </div>
+
+        <!-- Rangée 1 : Cartes des Records Globaux -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            
+            <!-- Item le plus rentable global -->
+            <div class="bg-gray-800 p-5 rounded-lg border border-amber-500/40 flex justify-between items-center">
+                <div>
+                    <p class="text-xs text-amber-400 font-semibold uppercase tracking-wider mb-1">🏆 Item le plus rentable (Global)</p>
+                    <h3 id="best-item-name" class="text-xl font-bold text-white">Aucun brisage</h3>
+                    <p id="best-item-player" class="text-xs text-gray-400 mt-0.5">-</p>
+                </div>
+                <div class="text-right">
+                    <span id="best-item-profit" class="text-2xl font-extrabold text-green-400">0 K</span>
+                </div>
+            </div>
+
+            <!-- Plus gros Coefficient global -->
+            <div class="bg-gray-800 p-5 rounded-lg border border-amber-500/40 flex justify-between items-center">
+                <div>
+                    <p class="text-xs text-amber-400 font-semibold uppercase tracking-wider mb-1">🚀 Plus gros Coefficient (Global - Max 4000%)</p>
+                    <h3 id="best-coeff-name" class="text-xl font-bold text-white">Aucun brisage</h3>
+                    <p id="best-coeff-player" class="text-xs text-gray-400 mt-0.5">-</p>
+                </div>
+                <div class="text-right">
+                    <span id="best-coeff-value" class="text-2xl font-extrabold text-amber-400">0%</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Rangée 2 : Cartes KPI Globales -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            
+            <!-- Bénéfice Moyen par Brisage -->
+            <div class="bg-gray-800 p-5 rounded-lg border border-amber-500/40 flex justify-between items-center">
+                <div>
+                    <p class="text-xs text-amber-400 font-semibold uppercase tracking-wider mb-1">📈 Bénéfice Moyen / Brisage</p>
+                    <h3 class="text-sm font-medium text-gray-300">Moyenne globale</h3>
+                    <p id="avg-profit-count" class="text-xs text-gray-400 mt-0.5">Sur 0 brisages</p>
+                </div>
+                <div class="text-right">
+                    <span id="avg-profit-value" class="text-2xl font-extrabold text-green-400">0 K</span>
+                </div>
+            </div>
+
+            <!-- Taux de Brisages Positifs -->
+            <div class="bg-gray-800 p-5 rounded-lg border border-amber-500/40 flex justify-between items-center">
+                <div>
+                    <p class="text-xs text-amber-400 font-semibold uppercase tracking-wider mb-1">🎯 Taux de Brisages Rentables</p>
+                    <h3 class="text-sm font-medium text-gray-300">Brisages en bénéfice</h3>
+                    <p id="positive-rate-details" class="text-xs text-gray-400 mt-0.5">0 sur 0 brisages</p>
+                </div>
+                <div class="text-right">
+                    <span id="positive-rate-value" class="text-2xl font-extrabold text-amber-400">0%</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Tableau du Bilan par Joueur -->
+        <div class="bg-gray-800 p-5 rounded-lg space-y-4">
+            <h2 class="text-xl font-bold text-amber-300">Bilan Général par Joueur</h2>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead>
+                        <tr class="border-b border-gray-700 text-gray-400 text-xs">
+                            <th class="p-2">Joueur</th>
+                            <th class="p-2 text-center">Brisages</th>
+                            <th class="p-2 text-center">Taux Positif (%)</th>
+                            <th class="p-2">Top Item (Kamas)</th>
+                            <th class="p-2">Top Item (Coeff)</th>
+                            <th class="p-2 text-right">Bénéfice Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stats-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        async function loadStatsAndRecords() {
+            try {
+                // 1. Chargement de l'ensemble des brisages
+                const resBrisage = await fetch('/api/brisage');
+                const allData = await resBrisage.json();
+
+                // 2. Calcul des statistiques et records individuels par joueur
+                const playerStatsMap = {};
+
+                allData.forEach(item => {
+                    const player = item.pseudo || 'Inconnu';
+                    if (!playerStatsMap[player]) {
+                        playerStatsMap[player] = {
+                            pseudo: player,
+                            count: 0,
+                            positiveCount: 0,
+                            totalProfit: 0,
+                            bestProfitItem: null,
+                            bestCoeffItem: null
+                        };
+                    }
+
+                    const pData = playerStatsMap[player];
+                    pData.count += 1;
+                    pData.totalProfit += item.kama_profit;
+                    if (item.kama_profit >= 0) {
+                        pData.positiveCount += 1;
+                    }
+
+                    // Meilleur profit par joueur
+                    if (!pData.bestProfitItem || item.kama_profit > pData.bestProfitItem.kama_profit) {
+                        pData.bestProfitItem = item;
+                    }
+
+                    // Meilleur coefficient par joueur (max 4000%)
+                    if (item.coeff <= 4000) {
+                        if (!pData.bestCoeffItem || 
+                            item.coeff > pData.bestCoeffItem.coeff || 
+                            (item.coeff === pData.bestCoeffItem.coeff && item.id > pData.bestCoeffItem.id)) {
+                            pData.bestCoeffItem = item;
+                        }
+                    }
+                });
+
+                const playerStats = Object.values(playerStatsMap).sort((a, b) => b.totalProfit - a.totalProfit);
+
+                // Rendu de la table Joueurs
+                const statsTbody = document.getElementById('stats-table-body');
+                statsTbody.innerHTML = '';
+
+                if (playerStats.length === 0) {
+                    statsTbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500 italic">Aucune donnée disponible</td></tr>';
+                } else {
+                    playerStats.forEach(row => {
+                        const tr = document.createElement('tr');
+                        tr.className = 'border-b border-gray-700 hover:bg-gray-750';
+                        const profitClass = row.totalProfit >= 0 ? 'text-green-400' : 'text-red-400';
+                        const positiveRate = ((row.positiveCount / row.count) * 100).toFixed(1);
+
+                        const bestProfitText = row.bestProfitItem 
+                            ? `<span class="font-semibold text-white">${row.bestProfitItem.item_name}</span> <span class="text-xs text-green-400 font-bold">(+${row.bestProfitItem.kama_profit.toLocaleString()} K)</span>`
+                            : '-';
+
+                        const bestCoeffText = row.bestCoeffItem 
+                            ? `<span class="font-semibold text-white">${row.bestCoeffItem.item_name}</span> <span class="text-xs text-amber-400 font-bold">(${row.bestCoeffItem.coeff}%)</span>`
+                            : '-';
+
+                        tr.innerHTML = `
+                            <td class="p-2 font-semibold text-amber-200">${row.pseudo}</td>
+                            <td class="p-2 text-center">${row.count}</td>
+                            <td class="p-2 text-center">
+                                <span class="bg-gray-700 text-amber-300 font-bold px-2 py-0.5 rounded text-xs border border-gray-600">
+                                    ${positiveRate}% (${row.positiveCount}/${row.count})
+                                </span>
+                            </td>
+                            <td class="p-2">${bestProfitText}</td>
+                            <td class="p-2">${bestCoeffText}</td>
+                            <td class="p-2 text-right font-bold ${profitClass}">${row.totalProfit.toLocaleString()} K</td>
+                        `;
+                        statsTbody.appendChild(tr);
+                    });
+                }
+
+                // 3. Traitement des cartes globales
+                if (allData.length > 0) {
+                    // Item le plus rentable global
+                    let maxProfitItem = allData[0];
+                    let totalProfitSum = 0;
+                    let positiveCountGlobal = 0;
+
+                    allData.forEach(item => {
+                        if (item.kama_profit > maxProfitItem.kama_profit) {
+                            maxProfitItem = item;
+                        }
+                        totalProfitSum += item.kama_profit;
+                        if (item.kama_profit >= 0) {
+                            positiveCountGlobal++;
+                        }
+                    });
+
+                    document.getElementById('best-item-name').innerText = maxProfitItem.item_name;
+                    document.getElementById('best-item-player').innerText = `Par ${maxProfitItem.pseudo} le ${maxProfitItem.entry_date}`;
+                    document.getElementById('best-item-profit').innerText = `+${maxProfitItem.kama_profit.toLocaleString()} K`;
+
+                    // Plus gros Coefficient global (<= 4000%)
+                    const validCoeffItems = allData.filter(item => item.coeff <= 4000);
+
+                    if (validCoeffItems.length > 0) {
+                        let maxCoeffItem = validCoeffItems[0];
+                        validCoeffItems.forEach(item => {
+                            if (item.coeff > maxCoeffItem.coeff || (item.coeff === maxCoeffItem.coeff && item.id > maxCoeffItem.id)) {
+                                maxCoeffItem = item;
+                            }
+                        });
+
+                        document.getElementById('best-coeff-name').innerText = maxCoeffItem.item_name;
+                        document.getElementById('best-coeff-player').innerText = `Par ${maxCoeffItem.pseudo} le ${maxCoeffItem.entry_date}`;
+                        document.getElementById('best-coeff-value').innerText = `${maxCoeffItem.coeff}%`;
+                    }
+
+                    // Bénéfice Moyen
+                    const avgProfit = Math.round(totalProfitSum / allData.length);
+                    const avgElement = document.getElementById('avg-profit-value');
+                    avgElement.innerText = `${avgProfit >= 0 ? '+' : ''}${avgProfit.toLocaleString()} K`;
+                    avgElement.className = `text-2xl font-extrabold ${avgProfit >= 0 ? 'text-green-400' : 'text-red-400'}`;
+                    document.getElementById('avg-profit-count').innerText = `Sur ${allData.length} brisage${allData.length > 1 ? 's' : ''}`;
+
+                    // Taux Global
+                    const positiveRateGlobal = ((positiveCountGlobal / allData.length) * 100).toFixed(1);
+                    document.getElementById('positive-rate-value').innerText = `${positiveRateGlobal}%`;
+                    document.getElementById('positive-rate-details').innerText = `${positiveCountGlobal} sur ${allData.length} brisage${allData.length > 1 ? 's' : ''}`;
+                }
+            } catch (err) {
+                console.error("Erreur lors du chargement des données :", err);
+            }
+        }
+
+        loadStatsAndRecords();
+    </script>
+</body>
+</html>

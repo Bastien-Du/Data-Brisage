@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Data Mafia Brisage - Historique par Item</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white p-6">
+    <div class="max-w-7xl mx-auto space-y-6">
+        
+        <!-- En-tête centré + Navigation -->
+        <div class="bg-gray-800 p-4 rounded-lg border border-amber-500/30 text-center space-y-3">
+            <h1 class="text-3xl font-bold text-amber-400">Data Mafia Brisage</h1>
+            <nav class="flex justify-center gap-2">
+                <a href="/" class="bg-gray-700 hover:bg-gray-600 text-amber-300 font-bold px-4 py-2 rounded-lg text-sm transition">
+                    📝 Saisie & Historique
+                </a>
+                <a href="/bilan" class="bg-gray-700 hover:bg-gray-600 text-amber-300 font-bold px-4 py-2 rounded-lg text-sm transition">
+                    📊 Bilan & Stats
+                </a>
+                <a href="/items" class="bg-amber-500 text-gray-900 font-bold px-4 py-2 rounded-lg text-sm transition">
+                    📦 Historique par Item
+                </a>
+            </nav>
+        </div>
+
+        <!-- Section Tableau & Filtres -->
+        <div class="bg-gray-800 p-5 rounded-lg space-y-4">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-amber-300">Suivi du Dernier Brisage par Item</h2>
+                    <p class="text-xs text-gray-400">Repère les items qui n'ont pas été brisés depuis longtemps.</p>
+                </div>
+
+                <div class="flex flex-wrap gap-3 w-full md:w-auto">
+                    <!-- Recherche par nom -->
+                    <input type="text" id="search-item" placeholder="🔍 Rechercher un item..." 
+                           class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-amber-400 w-full md:w-64">
+
+                    <!-- Selecteur de tri -->
+                    <select id="sort-order" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-amber-400">
+                        <option value="oldest">⏳ Plus ancien au plus récent (A réviser)</option>
+                        <option value="newest">🆕 Plus récent au plus ancien</option>
+                        <option value="count">📊 Nombre de brisages (Décroissant)</option>
+                        <option value="name">🔤 Nom de l'item (A-Z)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Tableau -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead>
+                        <tr class="border-b border-gray-700 text-gray-400 text-xs uppercase">
+                            <th class="p-3">Nom de l'Item</th>
+                            <th class="p-3 text-center">Nombre de Brisages</th>
+                            <th class="p-3">Dernier Briseur</th>
+                            <th class="p-3 text-right">Dernier Coeff</th>
+                            <th class="p-3 text-right">Date du Dernier Brisage</th>
+                        </tr>
+                    </thead>
+                    <tbody id="items-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let itemGroupedList = [];
+
+        async function loadItemsHistory() {
+            try {
+                const res = await fetch('/api/brisage');
+                const allData = await res.json();
+
+                const itemsMap = {};
+
+                // Groupement des brisages par item
+                allData.forEach(entry => {
+                    const itemName = entry.item_name;
+                    if (!itemsMap[itemName]) {
+                        itemsMap[itemName] = {
+                            name: itemName,
+                            count: 0,
+                            latestEntry: entry
+                        };
+                    }
+
+                    itemsMap[itemName].count += 1;
+
+                    // Comparaison pour garder la date la plus récente
+                    if (new Date(entry.entry_date) > new Date(itemsMap[itemName].latestEntry.entry_date) || 
+                       (entry.entry_date === itemsMap[itemName].latestEntry.entry_date && entry.id > itemsMap[itemName].latestEntry.id)) {
+                        itemsMap[itemName].latestEntry = entry;
+                    }
+                });
+
+                itemGroupedList = Object.values(itemsMap);
+                renderTable();
+
+            } catch (err) {
+                console.error("Erreur de chargement des items :", err);
+            }
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('items-table-body');
+            const searchVal = document.getElementById('search-item').value.toLowerCase();
+            const sortVal = document.getElementById('sort-order').value;
+
+            // Filtrage par nom
+            let filtered = itemGroupedList.filter(item => 
+                item.name.toLowerCase().includes(searchVal)
+            );
+
+            // Tri
+            filtered.sort((a, b) => {
+                const dateA = new Date(a.latestEntry.entry_date);
+                const dateB = new Date(b.latestEntry.entry_date);
+
+                if (sortVal === 'oldest') {
+                    return dateA - dateB; // Plus ancien d'abord
+                } else if (sortVal === 'newest') {
+                    return dateB - dateA; // Plus récent d'abord
+                } else if (sortVal === 'count') {
+                    return b.count - a.count; // Nombre de brisages
+                } else if (sortVal === 'name') {
+                    return a.name.localeCompare(b.name);
+                }
+            });
+
+            tbody.innerHTML = '';
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500 italic">Aucun item trouvé</td></tr>';
+                return;
+            }
+
+            filtered.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-b border-gray-700 hover:bg-gray-750 transition';
+
+                const coeffClass = item.latestEntry.coeff >= 100 ? 'text-amber-400' : 'text-gray-400';
+
+                tr.innerHTML = `
+                    <td class="p-3 font-semibold text-white">${item.name}</td>
+                    <td class="p-3 text-center">
+                        <span class="bg-gray-700 text-amber-300 font-bold px-2.5 py-1 rounded-full text-xs">
+                            ${item.count}
+                        </span>
+                    </td>
+                    <td class="p-3 text-gray-300">${item.latestEntry.pseudo || 'Inconnu'}</td>
+                    <td class="p-3 text-right font-bold ${coeffClass}">${item.latestEntry.coeff}%</td>
+                    <td class="p-3 text-right font-mono text-amber-200 font-semibold">${item.latestEntry.entry_date}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        document.getElementById('search-item').addEventListener('input', renderTable);
+        document.getElementById('sort-order').addEventListener('change', renderTable);
+
+        loadItemsHistory();
+    </script>
+</body>
+</html>
