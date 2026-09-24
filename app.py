@@ -6,7 +6,7 @@ from datetime import datetime
 
 app = Flask(__name__)
 
-# Récupère l'URL Neon depuis la variable d'environnement ou utilise ta clé directement
+# Récupère l'URL Neon depuis la variable d'environnement ou utilise la clé par défaut
 DATABASE_URL = os.environ.get(
     'DATABASE_URL', 
     'postgresql://neondb_owner:npg_odELOk7R8PYb@ep-silent-wildflower-b2o2suvs-pooler.c-6.eu-central-1.aws.neon.tech/neondb?sslmode=require'
@@ -34,6 +34,12 @@ def init_db():
     conn.commit()
     cursor.close()
     conn.close()
+
+# Initialisation de la BDD au chargement de l'application (nécessaire pour Render)
+try:
+    init_db()
+except Exception as e:
+    print(f"Erreur d'initialisation BDD: {e}")
 
 @app.route('/')
 def index():
@@ -80,22 +86,30 @@ def get_stats():
 
 @app.route('/api/brisage', methods=['POST'])
 def add_data():
-    req = request.json
+    req = request.json or {}
     entry_date = req.get('entry_date') or datetime.now().strftime('%Y-%m-%d')
     
+    # Conversion sécurisée des types pour PostgreSQL
+    try:
+        craft_cost = int(req.get('craft_cost')) if req.get('craft_cost') is not None and req.get('craft_cost') != '' else 0
+        coeff = float(req.get('coeff')) if req.get('coeff') is not None and req.get('coeff') != '' else 0.0
+        kama_profit = int(req.get('kama_profit')) if req.get('kama_profit') is not None and req.get('kama_profit') != '' else 0
+    except (ValueError, TypeError) as e:
+        return jsonify({"status": "error", "message": f"Données numériques invalides: {e}"}), 400
+
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute('''
         INSERT INTO brisage (pseudo, item_name, category, break_type, craft_cost, coeff, kama_profit, entry_date)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
     ''', (
-        req.get('pseudo'), 
-        req.get('item_name'), 
-        req.get('category'), 
-        req.get('break_type'), 
-        req.get('craft_cost'), 
-        req.get('coeff'), 
-        req.get('kama_profit'), 
+        req.get('pseudo', ''), 
+        req.get('item_name', ''), 
+        req.get('category', ''), 
+        req.get('break_type', ''), 
+        craft_cost, 
+        coeff, 
+        kama_profit, 
         entry_date
     ))
     conn.commit()
@@ -105,7 +119,15 @@ def add_data():
 
 @app.route('/api/brisage/<int:item_id>', methods=['PUT'])
 def update_data(item_id):
-    req = request.json
+    req = request.json or {}
+    
+    try:
+        craft_cost = int(req.get('craft_cost')) if req.get('craft_cost') is not None and req.get('craft_cost') != '' else 0
+        coeff = float(req.get('coeff')) if req.get('coeff') is not None and req.get('coeff') != '' else 0.0
+        kama_profit = int(req.get('kama_profit')) if req.get('kama_profit') is not None and req.get('kama_profit') != '' else 0
+    except (ValueError, TypeError) as e:
+        return jsonify({"status": "error", "message": f"Données numériques invalides: {e}"}), 400
+
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute('''
@@ -113,13 +135,13 @@ def update_data(item_id):
         SET pseudo = %s, item_name = %s, category = %s, break_type = %s, craft_cost = %s, coeff = %s, kama_profit = %s, entry_date = %s
         WHERE id = %s
     ''', (
-        req.get('pseudo'),
-        req.get('item_name'),
-        req.get('category'),
-        req.get('break_type'),
-        req.get('craft_cost'),
-        req.get('coeff'),
-        req.get('kama_profit'),
+        req.get('pseudo', ''),
+        req.get('item_name', ''),
+        req.get('category', ''),
+        req.get('break_type', ''),
+        craft_cost,
+        coeff,
+        kama_profit,
         req.get('entry_date'),
         item_id
     ))
@@ -139,6 +161,5 @@ def delete_data(item_id):
     return jsonify({"status": "deleted"}), 200
 
 if __name__ == '__main__':
-    init_db()
     print("Serveur lancé sur http://127.0.0.1:5000")
     app.run(debug=True, port=5000)
