@@ -7,10 +7,7 @@ from datetime import datetime
 app = Flask(__name__)
 
 # Récupère l'URL Neon depuis la variable d'environnement ou utilise la clé par défaut
-DATABASE_URL = os.environ.get(
-    'DATABASE_URL', 
-    'postgresql://neondb_owner:npg_odELOk7R8PYb@ep-silent-wildflower-b2o2suvs-pooler.c-6.eu-central-1.aws.neon.tech/neondb?sslmode=require'
-)
+DATABASE_URL = os.environ.get('DATABASE_URL')
 
 def get_db_connection():
     return psycopg2.connect(DATABASE_URL)
