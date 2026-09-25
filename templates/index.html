@@ -187,9 +187,16 @@
             <option value="Bouclier">Bouclier</option>
           </select>
 
-          <select id="filter-date" class="bg-[#20293a] text-xs text-white rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500">
-            <option value="desc">Date (Plus récent)</option>
-            <option value="asc">Date (Plus ancien)</option>
+          <!-- Sélecteur de tri étendu -->
+          <select id="sort-by" class="bg-[#20293a] text-xs text-white rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500">
+            <option value="date-desc">Date (Plus récent)</option>
+            <option value="date-asc">Date (Plus ancien)</option>
+            <option value="profit-desc">Bénéfice (Plus élevé)</option>
+            <option value="profit-asc">Bénéfice (Moins élevé)</option>
+            <option value="cost-desc">Coût Craft (Plus cher)</option>
+            <option value="cost-asc">Coût Craft (Moins cher)</option>
+            <option value="coeff-desc">Coefficient (Plus élevé)</option>
+            <option value="coeff-asc">Coefficient (Moins élevé)</option>
           </select>
         </div>
       </div>
@@ -302,7 +309,6 @@
   <script>
     document.addEventListener("DOMContentLoaded", () => {
 
-      // Valeur par défaut de la date : aujourd'hui
       const dateInput = document.getElementById("break-date");
       if (dateInput && !dateInput.value) {
         dateInput.value = new Date().toISOString().split('T')[0];
@@ -331,7 +337,7 @@
       runesValueInput.addEventListener("input", updateCalculatedBenefit);
 
 
-      // --- AUTOCOMPLÉTION ---
+      // --- AUTOCOMPLÉTION (TRI PAR ORDRE ALPHABÉTIQUE) ---
       function setupAutocomplete(inputId, dropdownId, wrapperId, jsonUrl) {
         const input = document.getElementById(inputId);
         const dropdown = document.getElementById(dropdownId);
@@ -343,7 +349,10 @@
 
         fetch(jsonUrl)
           .then(res => res.json())
-          .then(data => { itemsList = data; })
+          .then(data => { 
+            // Tri par ordre alphabétique
+            itemsList = data.sort((a, b) => a.localeCompare(b, 'fr')); 
+          })
           .catch(err => console.error(`Erreur de chargement (${jsonUrl}):`, err));
 
         function renderOptions(filterText = "") {
@@ -394,7 +403,7 @@
       setupAutocomplete("break-type-input", "break-type-dropdown", "break-type-wrapper", "/static/break_types.json");
 
 
-      // --- HISTORIQUE & PAGINATION ---
+      // --- HISTORIQUE & PAGINATION (AVEC OPTIONS DE TRI ÉTENDUES) ---
       let allHistoryData = [];
       let currentPage = 1;
       const itemsPerPage = 50;
@@ -414,7 +423,7 @@
       function getFilteredData() {
         const search = document.getElementById("search-input").value.toLowerCase();
         const cat = document.getElementById("filter-category").value;
-        const sortDate = document.getElementById("filter-date").value;
+        const sortBy = document.getElementById("sort-by").value;
 
         let filtered = allHistoryData.filter(item => {
           const matchSearch = (item.item_name && item.item_name.toLowerCase().includes(search)) ||
@@ -423,10 +432,35 @@
           return matchSearch && matchCat;
         });
 
+        // Calcul des bénéfices explicites pour chaque élément pour le tri
+        filtered.forEach(item => {
+          if (item.kama_profit === undefined) {
+            item.kama_profit = (item.runes_value || 0) - (item.craft_cost || 0);
+          }
+        });
+
+        // Application du tri selon l'option sélectionnée
         filtered.sort((a, b) => {
-          const dateA = new Date(a.entry_date);
-          const dateB = new Date(b.entry_date);
-          return sortDate === "desc" ? dateB - dateA : dateA - dateB;
+          switch (sortBy) {
+            case "date-asc":
+              return new Date(a.entry_date) - new Date(b.entry_date);
+            case "date-desc":
+              return new Date(b.entry_date) - new Date(a.entry_date);
+            case "profit-desc":
+              return b.kama_profit - a.kama_profit;
+            case "profit-asc":
+              return a.kama_profit - b.kama_profit;
+            case "cost-desc":
+              return (b.craft_cost || 0) - (a.craft_cost || 0);
+            case "cost-asc":
+              return (a.craft_cost || 0) - (b.craft_cost || 0);
+            case "coeff-desc":
+              return (b.coeff || 0) - (a.coeff || 0);
+            case "coeff-asc":
+              return (a.coeff || 0) - (b.coeff || 0);
+            default:
+              return new Date(b.entry_date) - new Date(a.entry_date);
+          }
         });
 
         return filtered;
@@ -455,7 +489,7 @@
             const tr = document.createElement("tr");
             tr.className = "hover:bg-gray-800/30 transition-colors";
 
-            const profit = item.kama_profit !== undefined ? item.kama_profit : ((item.runes_value || 0) - (item.craft_cost || 0));
+            const profit = item.kama_profit;
             const profitClass = profit >= 0 ? "text-emerald-400" : "text-red-400";
             const formattedProfit = (profit >= 0 ? "+" : "") + profit.toLocaleString() + " K";
 
@@ -598,10 +632,10 @@
         }
       };
 
-      // Filtres & Navigation
+      // Filtres, Tri & Navigation
       document.getElementById("search-input").addEventListener("input", () => { currentPage = 1; renderTable(); });
       document.getElementById("filter-category").addEventListener("change", () => { currentPage = 1; renderTable(); });
-      document.getElementById("filter-date").addEventListener("change", () => { currentPage = 1; renderTable(); });
+      document.getElementById("sort-by").addEventListener("change", () => { currentPage = 1; renderTable(); });
 
       document.getElementById("btn-prev-page").addEventListener("click", () => {
         if (currentPage > 1) { currentPage--; renderTable(); }
