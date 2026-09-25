@@ -232,6 +232,73 @@
 
   </div>
 
+  <!-- Modal Édition -->
+  <div id="edit-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+    <div class="bg-[#171e2e] border border-amber-500/30 rounded-xl p-6 w-full max-w-2xl shadow-2xl space-y-4">
+      <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+        <h3 class="text-amber-400 font-bold text-lg">Éditer le brisage</h3>
+        <button id="close-modal" class="text-gray-400 hover:text-white text-xl font-bold">&times;</button>
+      </div>
+
+      <form id="edit-form" class="space-y-4">
+        <input type="hidden" id="edit-id" />
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1">Pseudo</label>
+            <input type="text" id="edit-pseudo" required class="w-full bg-[#20293a] text-white text-sm rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1">Nom de l'item</label>
+            <input type="text" id="edit-item-name" required class="w-full bg-[#20293a] text-white text-sm rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1">Catégorie</label>
+            <select id="edit-category" class="w-full bg-[#20293a] text-white text-sm rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500">
+              <option value="Chapeau">Chapeau</option>
+              <option value="Cape">Cape</option>
+              <option value="Amulette">Amulette</option>
+              <option value="Anneau">Anneau</option>
+              <option value="Bottes">Bottes</option>
+              <option value="Ceinture">Ceinture</option>
+              <option value="Arme">Arme</option>
+              <option value="Bouclier">Bouclier</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1">Type de brisage</label>
+            <input type="text" id="edit-break-type" required class="w-full bg-[#20293a] text-white text-sm rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1">Coût du Craft (Kamas)</label>
+            <input type="number" id="edit-craft-cost" required class="w-full bg-[#20293a] text-white text-sm rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1">Coefficient obtenu (%)</label>
+            <input type="number" id="edit-coeff" required class="w-full bg-[#20293a] text-white text-sm rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1">Valeur Runes (Kamas)</label>
+            <input type="number" id="edit-runes-value" required class="w-full bg-[#20293a] text-white text-sm rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1">Date</label>
+            <input type="date" id="edit-date" required class="w-full bg-[#20293a] text-white text-sm rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500" />
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-2">
+          <button type="button" id="btn-cancel-edit" class="bg-gray-700 hover:bg-gray-600 text-gray-200 font-semibold px-4 py-2 rounded-lg text-sm transition">
+            Annuler
+          </button>
+          <button type="submit" class="bg-amber-500 hover:bg-amber-600 text-gray-950 font-bold px-4 py-2 rounded-lg text-sm transition">
+            Sauvegarder
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
     document.addEventListener("DOMContentLoaded", () => {
 
@@ -402,6 +469,7 @@
               <td class="py-3">${item.coeff}%</td>
               <td class="py-3 font-semibold ${profitClass}">${formattedProfit}</td>
               <td class="py-3 text-right space-x-1">
+                <button onclick="editEntry(${item.id})" class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 text-xs font-semibold px-2.5 py-1 rounded transition-colors">Éditer</button>
                 <button onclick="deleteEntry(${item.id})" class="bg-red-500/20 hover:bg-red-500/30 text-red-400 text-xs font-semibold px-2.5 py-1 rounded transition-colors">Supprimer</button>
               </td>
             `;
@@ -444,7 +512,6 @@
           });
 
           if (res.ok) {
-            // Recharger la liste et réinitialiser les champs
             await loadHistory();
             form.reset();
             dateInput.value = new Date().toISOString().split('T')[0];
@@ -456,6 +523,67 @@
         } catch (err) {
           console.error("Erreur serveur :", err);
           alert("Impossible de contacter le serveur.");
+        }
+      });
+
+      // --- ÉDITION & MODAL ---
+      const editModal = document.getElementById("edit-modal");
+      const editForm = document.getElementById("edit-form");
+
+      window.editEntry = function(id) {
+        const item = allHistoryData.find(i => i.id === id);
+        if (!item) return;
+
+        document.getElementById("edit-id").value = item.id;
+        document.getElementById("edit-pseudo").value = item.pseudo || "";
+        document.getElementById("edit-item-name").value = item.item_name || "";
+        document.getElementById("edit-category").value = item.category || "Chapeau";
+        document.getElementById("edit-break-type").value = item.break_type || "";
+        document.getElementById("edit-craft-cost").value = item.craft_cost || 0;
+        document.getElementById("edit-coeff").value = item.coeff || 0;
+        document.getElementById("edit-runes-value").value = item.runes_value || 0;
+        document.getElementById("edit-date").value = item.entry_date || "";
+
+        editModal.classList.remove("hidden");
+      };
+
+      document.getElementById("close-modal").addEventListener("click", () => editModal.classList.add("hidden"));
+      document.getElementById("btn-cancel-edit").addEventListener("click", () => editModal.classList.add("hidden"));
+
+      editForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const id = document.getElementById("edit-id").value;
+
+        const craftCost = parseFloat(document.getElementById("edit-craft-cost").value) || 0;
+        const runesValue = parseFloat(document.getElementById("edit-runes-value").value) || 0;
+
+        const payload = {
+          pseudo: document.getElementById("edit-pseudo").value,
+          item_name: document.getElementById("edit-item-name").value,
+          category: document.getElementById("edit-category").value,
+          break_type: document.getElementById("edit-break-type").value,
+          craft_cost: craftCost,
+          coeff: parseFloat(document.getElementById("edit-coeff").value) || 0,
+          runes_value: runesValue,
+          kama_profit: runesValue - craftCost,
+          entry_date: document.getElementById("edit-date").value
+        };
+
+        try {
+          const res = await fetch(`/api/brisage/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          if (res.ok) {
+            editModal.classList.add("hidden");
+            loadHistory();
+          } else {
+            alert("Erreur lors de la modification.");
+          }
+        } catch (err) {
+          console.error("Erreur serveur :", err);
         }
       });
 
