@@ -175,8 +175,13 @@
           <select id="filter-category" class="bg-[#20293a] text-xs text-white rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500">
             <option value="all">Toutes catégories</option>
             <option value="Chapeau">Chapeau</option>
-            <option value="Bottes">Bottes</option>
+            <option value="Cape">Cape</option>
             <option value="Amulette">Amulette</option>
+            <option value="Anneau">Anneau</option>
+            <option value="Bottes">Bottes</option>
+            <option value="Ceinture">Ceinture</option>
+            <option value="Arme">Arme</option>
+            <option value="Bouclier">Bouclier</option>
           </select>
 
           <select id="filter-date" class="bg-[#20293a] text-xs text-white rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500">
@@ -186,6 +191,7 @@
         </div>
       </div>
 
+      <!-- Tableau d'historique -->
       <div class="overflow-x-auto">
         <table class="w-full text-left text-sm text-gray-300">
           <thead class="text-xs text-gray-400 border-b border-gray-800">
@@ -201,30 +207,32 @@
               <th scope="col" class="pb-3 font-semibold text-right">Actions</th>
             </tr>
           </thead>
-          <tbody id="history-tbody" class="divide-y divide-gray-800/60">
-            <tr class="hover:bg-gray-800/30 transition-colors">
-              <td class="py-3 text-xs text-gray-400">2026-09-25</td>
-              <td class="py-3 font-medium text-white">Kebab</td>
-              <td class="py-3"><span class="bg-[#20293a] text-gray-300 text-xs px-2.5 py-1 rounded">Chapeau</span></td>
-              <td class="py-3 font-medium text-white">Masque Ardent</td>
-              <td class="py-3"><span class="bg-amber-500/10 text-amber-500 border border-amber-500/30 text-xs font-semibold px-2 py-0.5 rounded">Do So</span></td>
-              <td class="py-3">2 900 000 K</td>
-              <td class="py-3">925%</td>
-              <td class="py-3 font-semibold text-emerald-400">502 992 K</td>
-              <td class="py-3 text-right space-x-1">
-                <button class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 text-xs font-semibold px-2.5 py-1 rounded transition-colors">Éditer</button>
-                <button class="bg-red-500/20 hover:bg-red-500/30 text-red-400 text-xs font-semibold px-2.5 py-1 rounded transition-colors">Supprimer</button>
-              </td>
-            </tr>
-          </tbody>
+          <tbody id="history-tbody" class="divide-y divide-gray-800/60"></tbody>
         </table>
       </div>
+
+      <!-- Barre de Pagination -->
+      <div class="flex items-center justify-between border-t border-gray-800/80 pt-4 text-xs text-gray-400">
+        <div id="pagination-info">Affichage de 0 à 0 sur 0 brisages</div>
+        <div class="flex items-center gap-2">
+          <button id="btn-prev-page" class="bg-[#20293a] hover:bg-gray-700 text-gray-300 font-semibold px-3 py-1.5 rounded-lg border border-gray-700/60 disabled:opacity-40 disabled:cursor-not-allowed transition">
+            ◄ Précédent
+          </button>
+          <span id="page-indicator" class="font-bold text-amber-400 px-2">Page 1 / 1</span>
+          <button id="btn-next-page" class="bg-[#20293a] hover:bg-gray-700 text-gray-300 font-semibold px-3 py-1.5 rounded-lg border border-gray-700/60 disabled:opacity-40 disabled:cursor-not-allowed transition">
+            Suivant ►
+          </button>
+        </div>
+      </div>
+
     </div>
 
   </div>
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
+
+      // --- AUTOCOMPLÉTION ---
       function setupAutocomplete(inputId, dropdownId, wrapperId, jsonUrl) {
         const input = document.getElementById(inputId);
         const dropdown = document.getElementById(dropdownId);
@@ -285,6 +293,121 @@
 
       setupAutocomplete("item-name-input", "item-name-dropdown", "item-name-wrapper", "/static/noms_items.json");
       setupAutocomplete("break-type-input", "break-type-dropdown", "break-type-wrapper", "/static/break_types.json");
+
+
+      // --- GESTION DE L'HISTORIQUE & PAGINATION (50 MAX / PAGE) ---
+      let allHistoryData = [];
+      let currentPage = 1;
+      const itemsPerPage = 50;
+
+      async function loadHistory() {
+        try {
+          const res = await fetch('/api/brisage');
+          if (res.ok) {
+            allHistoryData = await res.json();
+            renderTable();
+          }
+        } catch (err) {
+          console.error("Erreur lors du chargement de l'historique :", err);
+        }
+      }
+
+      function getFilteredData() {
+        const search = document.getElementById("search-input").value.toLowerCase();
+        const cat = document.getElementById("filter-category").value;
+        const sortDate = document.getElementById("filter-date").value;
+
+        let filtered = allHistoryData.filter(item => {
+          const matchSearch = (item.item_name && item.item_name.toLowerCase().includes(search)) ||
+                              (item.pseudo && item.pseudo.toLowerCase().includes(search));
+          const matchCat = cat === "all" || item.category === cat;
+          return matchSearch && matchCat;
+        });
+
+        filtered.sort((a, b) => {
+          const dateA = new Date(a.entry_date);
+          const dateB = new Date(b.entry_date);
+          return sortDate === "desc" ? dateB - dateA : dateA - dateB;
+        });
+
+        return filtered;
+      }
+
+      function renderTable() {
+        const tbody = document.getElementById("history-tbody");
+        const filtered = getFilteredData();
+
+        const totalItems = filtered.length;
+        const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+
+        if (currentPage > totalPages) currentPage = totalPages;
+        if (currentPage < 1) currentPage = 1;
+
+        const startIdx = (currentPage - 1) * itemsPerPage;
+        const endIdx = startIdx + itemsPerPage;
+        const pageItems = filtered.slice(startIdx, endIdx);
+
+        tbody.innerHTML = "";
+
+        if (pageItems.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="9" class="py-6 text-center text-gray-500 italic">Aucun brisage trouvé</td></tr>`;
+        } else {
+          pageItems.forEach(item => {
+            const tr = document.createElement("tr");
+            tr.className = "hover:bg-gray-800/30 transition-colors";
+
+            const profit = item.kama_profit || 0;
+            const profitClass = profit >= 0 ? "text-emerald-400" : "text-red-400";
+            const formattedProfit = (profit >= 0 ? "+" : "") + profit.toLocaleString() + " K";
+
+            tr.innerHTML = `
+              <td class="py-3 text-xs text-gray-400">${item.entry_date || '-'}</td>
+              <td class="py-3 font-medium text-white">${item.pseudo || 'Inconnu'}</td>
+              <td class="py-3"><span class="bg-[#20293a] text-gray-300 text-xs px-2.5 py-1 rounded border border-gray-700/50">${item.category || '-'}</span></td>
+              <td class="py-3 font-medium text-white">${item.item_name}</td>
+              <td class="py-3"><span class="bg-amber-500/10 text-amber-500 border border-amber-500/30 text-xs font-semibold px-2 py-0.5 rounded">${item.break_type || '-'}</span></td>
+              <td class="py-3">${(item.craft_cost || 0).toLocaleString()} K</td>
+              <td class="py-3">${item.coeff}%</td>
+              <td class="py-3 font-semibold ${profitClass}">${formattedProfit}</td>
+              <td class="py-3 text-right space-x-1">
+                <button onclick="editEntry(${item.id})" class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 text-xs font-semibold px-2.5 py-1 rounded transition-colors">Éditer</button>
+                <button onclick="deleteEntry(${item.id})" class="bg-red-500/20 hover:bg-red-500/30 text-red-400 text-xs font-semibold px-2.5 py-1 rounded transition-colors">Supprimer</button>
+              </td>
+            `;
+            tbody.appendChild(tr);
+          });
+        }
+
+        // Mettre à jour les contrôles de pagination
+        document.getElementById("pagination-info").textContent = 
+          totalItems > 0 
+            ? `Affichage de ${startIdx + 1} à ${Math.min(endIdx, totalItems)} sur ${totalItems} brisage${totalItems > 1 ? 's' : ''}`
+            : "Affichage de 0 sur 0 brisages";
+
+        document.getElementById("page-indicator").textContent = `Page ${currentPage} / ${totalPages}`;
+        document.getElementById("btn-prev-page").disabled = (currentPage <= 1);
+        document.getElementById("btn-next-page").disabled = (currentPage >= totalPages);
+      }
+
+      // Événements Filtres
+      document.getElementById("search-input").addEventListener("input", () => { currentPage = 1; renderTable(); });
+      document.getElementById("filter-category").addEventListener("change", () => { currentPage = 1; renderTable(); });
+      document.getElementById("filter-date").addEventListener("change", () => { currentPage = 1; renderTable(); });
+
+      // Événements Pagination
+      document.getElementById("btn-prev-page").addEventListener("click", () => {
+        if (currentPage > 1) {
+          currentPage--;
+          renderTable();
+        }
+      });
+
+      document.getElementById("btn-next-page").addEventListener("click", () => {
+        currentPage++;
+        renderTable();
+      });
+
+      loadHistory();
     });
   </script>
 </body>
