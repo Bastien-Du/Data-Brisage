@@ -337,8 +337,8 @@
       runesValueInput.addEventListener("input", updateCalculatedBenefit);
 
 
-      // --- AUTOCOMPLÉTION (TRI PAR ORDRE ALPHABÉTIQUE) ---
-      function setupAutocomplete(inputId, dropdownId, wrapperId, jsonUrl) {
+      // --- AUTOCOMPLÉTION & GESTION DES FAVORIS ---
+      function setupAutocomplete(inputId, dropdownId, wrapperId, jsonUrl, enableFavorites = false, storageKey = "") {
         const input = document.getElementById(inputId);
         const dropdown = document.getElementById(dropdownId);
         const wrapper = document.getElementById(wrapperId);
@@ -346,6 +346,13 @@
         if (!input || !dropdown || !wrapper) return;
 
         let itemsList = [];
+        let favorites = enableFavorites ? JSON.parse(localStorage.getItem(storageKey) || "[]") : [];
+
+        function saveFavorites() {
+          if (enableFavorites) {
+            localStorage.setItem(storageKey, JSON.stringify(favorites));
+          }
+        }
 
         fetch(jsonUrl)
           .then(res => res.json())
@@ -357,9 +364,20 @@
         function renderOptions(filterText = "") {
           dropdown.innerHTML = "";
           
-          const filtered = itemsList
-            .filter(item => item.toLowerCase().includes(filterText.toLowerCase()))
-            .slice(0, 50);
+          let filtered = itemsList.filter(item => item.toLowerCase().includes(filterText.toLowerCase()));
+
+          if (enableFavorites) {
+            // Trier de sorte que les favoris soient placés en haut
+            filtered.sort((a, b) => {
+              const isFavA = favorites.includes(a);
+              const isFavB = favorites.includes(b);
+              if (isFavA && !isFavB) return -1;
+              if (!isFavA && isFavB) return 1;
+              return a.localeCompare(b, 'fr');
+            });
+          }
+
+          filtered = filtered.slice(0, 50);
 
           if (filtered.length === 0) {
             dropdown.innerHTML = `<div class="px-3 py-2 text-xs text-gray-500">Aucun résultat</div>`;
@@ -367,17 +385,44 @@
           }
 
           filtered.forEach(itemValue => {
-            const item = document.createElement("div");
-            item.className = "px-3 py-2 text-sm text-gray-200 hover:bg-amber-500/20 hover:text-amber-400 cursor-pointer transition-colors";
-            item.textContent = itemValue;
+            const itemRow = document.createElement("div");
+            itemRow.className = "px-3 py-2 text-sm text-gray-200 hover:bg-amber-500/20 hover:text-amber-400 cursor-pointer transition-colors flex items-center justify-between";
 
-            item.addEventListener("click", () => {
+            const textSpan = document.createElement("span");
+            textSpan.textContent = itemValue;
+            textSpan.className = "flex-1";
+
+            itemRow.appendChild(textSpan);
+
+            if (enableFavorites) {
+              const isFav = favorites.includes(itemValue);
+              const favBtn = document.createElement("button");
+              favBtn.type = "button";
+              favBtn.className = "ml-2 text-sm focus:outline-none hover:scale-125 transition-transform";
+              favBtn.innerHTML = isFav ? "⭐" : "☆";
+              favBtn.title = isFav ? "Retirer des favoris" : "Ajouter aux favoris";
+
+              favBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                if (favorites.includes(itemValue)) {
+                  favorites = favorites.filter(fav => fav !== itemValue);
+                } else {
+                  favorites.push(itemValue);
+                }
+                saveFavorites();
+                renderOptions(input.value);
+              });
+
+              itemRow.appendChild(favBtn);
+            }
+
+            itemRow.addEventListener("click", () => {
               input.value = itemValue;
               dropdown.classList.add("hidden");
               input.dispatchEvent(new Event('change'));
             });
 
-            dropdown.appendChild(item);
+            dropdown.appendChild(itemRow);
           });
         }
 
@@ -399,10 +444,10 @@
       }
 
       setupAutocomplete("item-name-input", "item-name-dropdown", "item-name-wrapper", "/static/noms_items.json");
-      setupAutocomplete("break-type-input", "break-type-dropdown", "break-type-wrapper", "/static/break_types.json");
+      setupAutocomplete("break-type-input", "break-type-dropdown", "break-type-wrapper", "/static/break_types.json", true, "fav_break_types");
 
 
-      // --- HISTORIQUE & PAGINATION (AVEC OPTIONS DE TRI ÉTENDUES) ---
+      // --- HISTORIQUE & PAGINATION ---
       let allHistoryData = [];
       let currentPage = 1;
       const itemsPerPage = 50;
