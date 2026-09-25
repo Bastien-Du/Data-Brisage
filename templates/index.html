@@ -25,127 +25,242 @@
     }
   </style>
 </head>
-<body class="bg-[#0f172a] text-gray-100 min-h-screen p-6">
+<body class="bg-[#0b101d] text-gray-100 min-h-screen p-6">
 
   <div class="max-w-7xl mx-auto space-y-6">
 
-    <!-- Formulaire : Enregistrer un brisage -->
-    <div class="bg-[#1e293b] border border-gray-800 rounded-xl p-5 shadow-lg">
+    <!-- Section 1 : Formulaire "Enregistrer un brisage" -->
+    <div class="bg-[#171e2e] border border-gray-800/80 rounded-xl p-5 shadow-lg">
       <h2 class="text-amber-400 font-bold text-lg mb-4 flex items-center gap-2">
-        <span class="text-xl">+</span> Enregistrer un brisage
+        <span class="text-xl font-extrabold">+</span> Enregistrer un brisage
       </h2>
 
-      <form id="brisage-form" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        
-        <!-- Pseudo -->
-        <div>
-          <label class="block text-xs font-medium text-gray-400 mb-1">Pseudo</label>
-          <input 
-            type="text" 
-            id="player-name" 
-            placeholder="Asudon"
-            class="w-full bg-[#2a3447] text-white text-sm rounded-lg px-3 py-2 border border-gray-700 focus:outline-none focus:border-amber-500 transition-colors"
-          />
+      <form id="brisage-form" class="space-y-4">
+        <!-- Ligne 1 du formulaire -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <!-- Pseudo -->
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1">Pseudo</label>
+            <input 
+              type="text" 
+              id="player-name" 
+              placeholder="Asudon"
+              class="w-full bg-[#20293a] text-white text-sm rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500 transition-colors"
+            />
+          </div>
+
+          <!-- Nom de l'item (Autocomplétion) -->
+          <div class="relative w-full" id="item-name-wrapper">
+            <label class="block text-xs font-medium text-gray-400 mb-1">Nom de l'item</label>
+            <div class="relative">
+              <input 
+                type="text" 
+                id="item-name-input" 
+                placeholder="Ex: Masque Ardent"
+                autocomplete="off"
+                class="w-full bg-[#20293a] text-white text-sm rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500 transition-colors placeholder-gray-500"
+              />
+              <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400 text-xs">▼</span>
+            </div>
+            <div 
+              id="item-name-dropdown" 
+              class="hidden absolute z-50 left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-[#171e2e] border border-gray-700 rounded-lg shadow-2xl divide-y divide-gray-800/50 custom-scrollbar"
+            ></div>
+          </div>
+
+          <!-- Catégorie -->
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1">Catégorie</label>
+            <select id="category-select" class="w-full bg-[#20293a] text-white text-sm rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500 transition-colors">
+              <option value="Chapeau">Chapeau</option>
+              <option value="Cape">Cape</option>
+              <option value="Amulette">Amulette</option>
+              <option value="Anneau">Anneau</option>
+              <option value="Bottes">Bottes</option>
+              <option value="Ceinture">Ceinture</option>
+              <option value="Arme">Arme</option>
+              <option value="Bouclier">Bouclier</option>
+            </select>
+          </div>
+
+          <!-- Type de brisage (Autocomplétion) -->
+          <div class="relative w-full" id="break-type-wrapper">
+            <label class="block text-xs font-medium text-gray-400 mb-1">Type de brisage</label>
+            <div class="relative">
+              <input 
+                type="text" 
+                id="break-type-input" 
+                placeholder="Ex: Do So"
+                autocomplete="off"
+                class="w-full bg-[#20293a] text-white text-sm rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500 transition-colors placeholder-gray-500"
+              />
+              <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400 text-xs">▼</span>
+            </div>
+            <div 
+              id="break-type-dropdown" 
+              class="hidden absolute z-50 left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-[#171e2e] border border-gray-700 rounded-lg shadow-2xl divide-y divide-gray-800/50 custom-scrollbar"
+            ></div>
+          </div>
         </div>
 
-        <!-- Nom de l'item avec Autocomplétion -->
-        <div class="relative w-full" id="item-name-wrapper">
-          <label class="block text-xs font-medium text-gray-400 mb-1">Nom de l'item</label>
+        <!-- Ligne 2 du formulaire -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <!-- Coût du Craft -->
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1">Coût du Craft (Kamas)</label>
+            <input type="number" id="craft-cost" class="w-full bg-[#20293a] text-white text-sm rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500 transition-colors" />
+          </div>
+
+          <!-- Coefficient obtenu -->
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1">Coefficient obtenu (%)</label>
+            <input type="number" id="coeff" class="w-full bg-[#20293a] text-white text-sm rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500 transition-colors" />
+          </div>
+
+          <!-- Valeur Runes -->
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1">Valeur Runes obtenues (Kamas)</label>
+            <input type="number" id="runes-value" class="w-full bg-[#20293a] text-white text-sm rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500 transition-colors" />
+          </div>
+
+          <!-- Bénéfice estimé -->
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1">Bénéfice estimé</label>
+            <div class="w-full bg-[#111622] text-white font-bold text-sm rounded-lg px-3 py-2 border border-gray-800">
+              <span id="estimated-benefit">0 K</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ligne 3 du formulaire -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 pt-1">
+          <!-- Date -->
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1">Date du brisage</label>
+            <input type="date" id="break-date" class="w-full bg-[#20293a] text-white text-sm rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500 transition-colors" />
+          </div>
+
+          <!-- Bouton Enregistrer (occupe 3 colonnes) -->
+          <div class="md:col-span-3 flex items-end">
+            <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-gray-950 font-bold py-2 rounded-lg transition-colors shadow-md text-sm">
+              Enregistrer
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Section 2 : Historique des brisages -->
+    <div class="bg-[#171e2e] border border-gray-800/80 rounded-xl p-5 shadow-lg space-y-4">
+      
+      <!-- En-tête de la section Historique -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <h2 class="text-amber-400 font-bold text-lg">
+          Historique des brisages
+        </h2>
+
+        <!-- Barres de recherche et Filtres -->
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- Recherche -->
           <div class="relative">
             <input 
               type="text" 
-              id="item-name-input" 
-              placeholder="Ex: Masque Ardent"
-              autocomplete="off"
-              class="w-full bg-[#2a3447] text-white text-sm rounded-lg px-3 py-2 border border-gray-700 focus:outline-none focus:border-amber-500 transition-colors placeholder-gray-500"
+              id="search-input" 
+              placeholder="Rechercher item, joueur..." 
+              class="bg-[#20293a] text-xs text-white placeholder-gray-400 rounded-lg pl-8 pr-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500"
             />
-            <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400 text-xs">▼</span>
+            <span class="absolute left-2.5 top-2 text-gray-400 text-xs">🔍</span>
           </div>
-          <div 
-            id="item-name-dropdown" 
-            class="hidden absolute z-50 left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-[#1e2538] border border-gray-700 rounded-lg shadow-xl divide-y divide-gray-800/50 custom-scrollbar"
-          ></div>
-        </div>
 
-        <!-- Catégorie -->
-        <div>
-          <label class="block text-xs font-medium text-gray-400 mb-1">Catégorie</label>
-          <select id="category-select" class="w-full bg-[#2a3447] text-white text-sm rounded-lg px-3 py-2 border border-gray-700 focus:outline-none focus:border-amber-500 transition-colors">
+          <!-- Filtre Catégorie -->
+          <select id="filter-category" class="bg-[#20293a] text-xs text-white rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500">
+            <option value="all">Toutes catégories</option>
             <option value="Chapeau">Chapeau</option>
-            <option value="Cape">Cape</option>
-            <option value="Amulette">Amulette</option>
-            <option value="Anneau">Anneau</option>
             <option value="Bottes">Bottes</option>
-            <option value="Ceinture">Ceinture</option>
-            <option value="Arme">Arme</option>
-            <option value="Bouclier">Bouclier</option>
+            <option value="Amulette">Amulette</option>
+          </select>
+
+          <!-- Filtre Trie par Date -->
+          <select id="filter-date" class="bg-[#20293a] text-xs text-white rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500">
+            <option value="desc">Date (Plus récent)</option>
+            <option value="asc">Date (Plus ancien)</option>
           </select>
         </div>
+      </div>
 
-        <!-- Type de brisage avec Autocomplétion -->
-        <div class="relative w-full" id="break-type-wrapper">
-          <label class="block text-xs font-medium text-gray-400 mb-1">Type de brisage</label>
-          <div class="relative">
-            <input 
-              type="text" 
-              id="break-type-input" 
-              placeholder="Ex: Do So"
-              autocomplete="off"
-              class="w-full bg-[#2a3447] text-white text-sm rounded-lg px-3 py-2 border border-gray-700 focus:outline-none focus:border-amber-500 transition-colors placeholder-gray-500"
-            />
-            <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400 text-xs">▼</span>
-          </div>
-          <div 
-            id="break-type-dropdown" 
-            class="hidden absolute z-50 left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-[#1e2538] border border-gray-700 rounded-lg shadow-xl divide-y divide-gray-800/50 custom-scrollbar"
-          ></div>
-        </div>
+      <!-- Tableau d'historique -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-gray-300">
+          <thead class="text-xs text-gray-400 border-b border-gray-800">
+            <tr>
+              <th scope="col" class="pb-3 font-semibold">Date</th>
+              <th scope="col" class="pb-3 font-semibold">Joueur</th>
+              <th scope="col" class="pb-3 font-semibold">Catégorie</th>
+              <th scope="col" class="pb-3 font-semibold">Item</th>
+              <th scope="col" class="pb-3 font-semibold">Type</th>
+              <th scope="col" class="pb-3 font-semibold">Coût Craft</th>
+              <th scope="col" class="pb-3 font-semibold">Coeff</th>
+              <th scope="col" class="pb-3 font-semibold">Bénéfice</th>
+              <th scope="col" class="pb-3 font-semibold text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="history-tbody" class="divide-y divide-gray-800/60">
+            <!-- Exemple d'enregistrement 1 -->
+            <tr class="hover:bg-gray-800/30 transition-colors">
+              <td class="py-3 text-xs text-gray-400">2026-09-25</td>
+              <td class="py-3 font-medium text-white">Kebab</td>
+              <td class="py-3"><span class="bg-[#20293a] text-gray-300 text-xs px-2.5 py-1 rounded">Chapeau</span></td>
+              <td class="py-3 font-medium text-white">Masque Ardent</td>
+              <td class="py-3"><span class="bg-amber-500/10 text-amber-500 border border-amber-500/30 text-xs font-semibold px-2 py-0.5 rounded">Do So</span></td>
+              <td class="py-3">2 900 000 K</td>
+              <td class="py-3">925%</td>
+              <td class="py-3 font-semibold text-emerald-400">502 992 K</td>
+              <td class="py-3 text-right space-x-1">
+                <button class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 text-xs font-semibold px-2.5 py-1 rounded transition-colors">Éditer</button>
+                <button class="bg-red-500/20 hover:bg-red-500/30 text-red-400 text-xs font-semibold px-2.5 py-1 rounded transition-colors">Supprimer</button>
+              </td>
+            </tr>
 
-        <!-- Coût du Craft -->
-        <div>
-          <label class="block text-xs font-medium text-gray-400 mb-1">Coût du Craft (Kamas)</label>
-          <input type="number" id="craft-cost" class="w-full bg-[#2a3447] text-white text-sm rounded-lg px-3 py-2 border border-gray-700 focus:outline-none focus:border-amber-500 transition-colors" />
-        </div>
+            <!-- Exemple d'enregistrement 2 -->
+            <tr class="hover:bg-gray-800/30 transition-colors">
+              <td class="py-3 text-xs text-gray-400">2026-09-25</td>
+              <td class="py-3 font-medium text-white">Kebab</td>
+              <td class="py-3"><span class="bg-[#20293a] text-gray-300 text-xs px-2.5 py-1 rounded">Bottes</span></td>
+              <td class="py-3 font-medium text-white">Pikottes</td>
+              <td class="py-3"><span class="bg-amber-500/10 text-amber-500 border border-amber-500/30 text-xs font-semibold px-2 py-0.5 rounded">Do So</span></td>
+              <td class="py-3">1 800 000 K</td>
+              <td class="py-3">451%</td>
+              <td class="py-3 font-semibold text-emerald-400">626 947 K</td>
+              <td class="py-3 text-right space-x-1">
+                <button class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 text-xs font-semibold px-2.5 py-1 rounded transition-colors">Éditer</button>
+                <button class="bg-red-500/20 hover:bg-red-500/30 text-red-400 text-xs font-semibold px-2.5 py-1 rounded transition-colors">Supprimer</button>
+              </td>
+            </tr>
 
-        <!-- Coefficient -->
-        <div>
-          <label class="block text-xs font-medium text-gray-400 mb-1">Coefficient obtenu (%)</label>
-          <input type="number" id="coeff" class="w-full bg-[#2a3447] text-white text-sm rounded-lg px-3 py-2 border border-gray-700 focus:outline-none focus:border-amber-500 transition-colors" />
-        </div>
+            <!-- Exemple d'enregistrement 3 -->
+            <tr class="hover:bg-gray-800/30 transition-colors">
+              <td class="py-3 text-xs text-gray-400">2026-09-25</td>
+              <td class="py-3 font-medium text-white">Kebab</td>
+              <td class="py-3"><span class="bg-[#20293a] text-gray-300 text-xs px-2.5 py-1 rounded">Amulette</span></td>
+              <td class="py-3 font-medium text-white">Talisman Igans</td>
+              <td class="py-3"><span class="bg-amber-500/10 text-amber-500 border border-amber-500/30 text-xs font-semibold px-2 py-0.5 rounded">Do So</span></td>
+              <td class="py-3">2 600 000 K</td>
+              <td class="py-3">648%</td>
+              <td class="py-3 font-semibold text-emerald-400">733 417 K</td>
+              <td class="py-3 text-right space-x-1">
+                <button class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 text-xs font-semibold px-2.5 py-1 rounded transition-colors">Éditer</button>
+                <button class="bg-red-500/20 hover:bg-red-500/30 text-red-400 text-xs font-semibold px-2.5 py-1 rounded transition-colors">Supprimer</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
-        <!-- Valeur Runes -->
-        <div>
-          <label class="block text-xs font-medium text-gray-400 mb-1">Valeur Runes obtenues (Kamas)</label>
-          <input type="number" id="runes-value" class="w-full bg-[#2a3447] text-white text-sm rounded-lg px-3 py-2 border border-gray-700 focus:outline-none focus:border-amber-500 transition-colors" />
-        </div>
-
-        <!-- Bénéfice (Calculé / Lecture seule) -->
-        <div>
-          <label class="block text-xs font-medium text-gray-400 mb-1">Bénéfice estimé</label>
-          <div class="w-full bg-[#182030] text-gray-300 font-bold text-sm rounded-lg px-3 py-2 border border-gray-800">
-            <span id="estimated-benefit">0 K</span>
-          </div>
-        </div>
-
-        <!-- Date -->
-        <div>
-          <label class="block text-xs font-medium text-gray-400 mb-1">Date du brisage</label>
-          <input type="date" id="break-date" class="w-full bg-[#2a3447] text-white text-sm rounded-lg px-3 py-2 border border-gray-700 focus:outline-none focus:border-amber-500 transition-colors" />
-        </div>
-
-        <!-- Bouton Enregistrer -->
-        <div class="md:col-span-3 flex items-end">
-          <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-gray-900 font-bold py-2 rounded-lg transition-colors shadow-md">
-            Enregistrer
-          </button>
-        </div>
-
-      </form>
     </div>
 
   </div>
 
-  <!-- Script JS d'autocomplétion -->
+  <!-- Script JS d'autocomplétion dynamique -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
 
@@ -158,11 +273,13 @@
 
         let itemsList = [];
 
+        // Récupération des données depuis le fichier JSON
         fetch(jsonUrl)
           .then(res => res.json())
           .then(data => { itemsList = data; })
           .catch(err => console.error(`Erreur de chargement (${jsonUrl}):`, err));
 
+        // Rendu des suggestions
         function renderOptions(filterText = "") {
           dropdown.innerHTML = "";
           
@@ -190,6 +307,7 @@
           });
         }
 
+        // Événements
         input.addEventListener("focus", () => {
           renderOptions(input.value);
           dropdown.classList.remove("hidden");
@@ -207,7 +325,7 @@
         });
       }
 
-      // Initialisation
+      // Initialisation pour "Nom de l'item" et "Type de brisage"
       setupAutocomplete("item-name-input", "item-name-dropdown", "item-name-wrapper", "/static/noms_items.json");
       setupAutocomplete("break-type-input", "break-type-dropdown", "break-type-wrapper", "/static/break_types.json");
 
