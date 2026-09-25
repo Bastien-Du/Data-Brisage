@@ -174,7 +174,7 @@
         async function loadAutocompletions() {
             try {
                 // Chargement des items
-                const resItems = await fetch('/static/items.json');
+                const resItems = await fetch('/static/noms_items.json');
                 const items = await resItems.json();
                 const itemsDatalist = document.getElementById('items-list');
                 itemsDatalist.innerHTML = '';
