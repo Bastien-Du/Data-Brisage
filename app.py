@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from datetime import datetime
@@ -49,6 +49,14 @@ def bilan():
 @app.route('/items')
 def items():
     return render_template('items.html')
+
+@app.route('/static/items.json')
+def get_items_json():
+    return send_from_directory('static', 'items.json')
+
+@app.route('/static/break_types.json')
+def get_break_types_json():
+    return send_from_directory('static', 'break_types.json')
 
 @app.route('/api/brisage', methods=['GET'])
 def get_data():

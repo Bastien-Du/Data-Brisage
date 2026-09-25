@@ -8,7 +8,7 @@
 <body class="bg-gray-900 text-white p-6">
     <div class="max-w-7xl mx-auto space-y-6">
         
-        <!-- En-tête centré + Navigation en dessous -->
+        <!-- En-tête centré + Navigation -->
         <div class="bg-gray-800 p-4 rounded-lg border border-amber-500/30 text-center space-y-3">
             <h1 class="text-3xl font-bold text-amber-400">Data Mafia Brisage</h1>
             <nav class="flex justify-center gap-2">
@@ -37,10 +37,14 @@
                     <label class="block text-xs text-gray-300 mb-1">Pseudo</label>
                     <input type="text" id="pseudo" required placeholder="Ton pseudo..." class="w-full p-2 bg-gray-700 rounded border border-gray-600 focus:outline-none focus:border-amber-400 text-sm">
                 </div>
+
+                <!-- Champ Nom de l'item avec Autocomplétion -->
                 <div>
                     <label class="block text-xs text-gray-300 mb-1">Nom de l'item</label>
-                    <input type="text" id="item_name" required class="w-full p-2 bg-gray-700 rounded border border-gray-600 focus:outline-none focus:border-amber-400 text-sm">
+                    <input type="text" id="item_name" list="items-list" autocomplete="off" required placeholder="Tapez pour chercher..." class="w-full p-2 bg-gray-700 rounded border border-gray-600 focus:outline-none focus:border-amber-400 text-sm">
+                    <datalist id="items-list"></datalist>
                 </div>
+
                 <div>
                     <label class="block text-xs text-gray-300 mb-1">Catégorie</label>
                     <select id="category" required class="w-full p-2 bg-gray-700 rounded border border-gray-600 focus:outline-none focus:border-amber-400 text-sm">
@@ -54,10 +58,14 @@
                         <option value="Bouclier">🛡️ Bouclier</option>
                     </select>
                 </div>
+
+                <!-- Champ Type de brisage avec Autocomplétion -->
                 <div>
                     <label class="block text-xs text-gray-300 mb-1">Type de brisage</label>
-                    <input type="text" id="break_type" placeholder="Ex: Do So" required class="w-full p-2 bg-gray-700 rounded border border-gray-600 focus:outline-none focus:border-amber-400 text-sm">
+                    <input type="text" id="break_type" list="break-types-list" autocomplete="off" placeholder="Ex: Do So" required class="w-full p-2 bg-gray-700 rounded border border-gray-600 focus:outline-none focus:border-amber-400 text-sm">
+                    <datalist id="break-types-list"></datalist>
                 </div>
+
                 <div>
                     <label class="block text-xs text-gray-300 mb-1">Coût du Craft (Kamas)</label>
                     <input type="number" id="craft_cost" oninput="calculateProfit()" required class="w-full p-2 bg-gray-700 rounded border border-gray-600 focus:outline-none focus:border-amber-400 text-sm">
@@ -84,18 +92,15 @@
             </form>
         </div>
 
-        <!-- Tableau des données -->
+        <!-- Tableau de l'historique -->
         <div class="bg-gray-800 p-5 rounded-lg space-y-4">
             <div class="flex flex-col lg:flex-row justify-between items-center gap-4">
                 <h2 class="text-xl font-bold text-amber-300">Historique des brisages</h2>
                 
                 <div class="flex flex-wrap items-center gap-4 text-xs w-full lg:w-auto">
-                    <!-- Recherche -->
                     <div class="flex-1 lg:flex-none">
                         <input type="text" id="search-query" oninput="currentPage = 1; renderTable()" placeholder="🔍 Rechercher item, joueur..." class="w-full lg:w-64 p-1.5 bg-gray-700 rounded border border-gray-600 focus:outline-none focus:border-amber-400 text-white placeholder-gray-400">
                     </div>
-
-                    <!-- Filtre catégorie -->
                     <div>
                         <select id="filter-category" onchange="currentPage = 1; renderTable()" class="p-1.5 bg-gray-700 rounded border border-gray-600">
                             <option value="ALL">Toutes catégories</option>
@@ -109,8 +114,6 @@
                             <option value="Bouclier">Bouclier</option>
                         </select>
                     </div>
-
-                    <!-- Tri -->
                     <div>
                         <select id="sort-by" onchange="renderTable()" class="p-1.5 bg-gray-700 rounded border border-gray-600">
                             <option value="date-desc">Date (Plus récent)</option>
@@ -141,7 +144,6 @@
                 </table>
             </div>
 
-            <!-- Pagination -->
             <div class="flex justify-between items-center text-xs text-gray-400 pt-2 border-t border-gray-700">
                 <span id="page-info">Page 1 sur 1</span>
                 <div class="flex gap-2">
@@ -166,6 +168,35 @@
         const savedPseudo = localStorage.getItem('saved_pseudo');
         if (savedPseudo) {
             document.getElementById('pseudo').value = savedPseudo;
+        }
+
+        // Chargement des suggestions depuis les fichiers JSON
+        async function loadAutocompletions() {
+            try {
+                // Chargement des items
+                const resItems = await fetch('/static/items.json');
+                const items = await resItems.json();
+                const itemsDatalist = document.getElementById('items-list');
+                itemsDatalist.innerHTML = '';
+                items.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = typeof item === 'string' ? item : item.name;
+                    itemsDatalist.appendChild(option);
+                });
+
+                // Chargement des types de brisage / focus
+                const resTypes = await fetch('/static/break_types.json');
+                const breakTypes = await resTypes.json();
+                const typesDatalist = document.getElementById('break-types-list');
+                typesDatalist.innerHTML = '';
+                breakTypes.forEach(type => {
+                    const option = document.createElement('option');
+                    option.value = typeof type === 'string' ? type : type.name;
+                    typesDatalist.appendChild(option);
+                });
+            } catch (err) {
+                console.error("Erreur de chargement des suggestions JSON :", err);
+            }
         }
 
         function calculateProfit() {
@@ -269,13 +300,11 @@
             document.getElementById('craft_cost').value = item.craft_cost;
             document.getElementById('coeff').value = item.coeff;
             
-            // Calcul de la valeur des runes reconstruite
             document.getElementById('runes_value').value = item.craft_cost + item.kama_profit;
             document.getElementById('entry_date').value = item.entry_date;
 
             calculateProfit();
 
-            // Modification visuelle du formulaire
             document.getElementById('form-title').innerText = "✏️ Modifier le brisage";
             document.getElementById('submit-btn').innerText = "Mettre à jour";
             document.getElementById('cancel-edit-btn').classList.remove('hidden');
@@ -333,14 +362,12 @@
             };
 
             if (editId) {
-                // Modification (PUT)
                 await fetch(`/api/brisage/${editId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
             } else {
-                // Ajout normal (POST)
                 await fetch('/api/brisage', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -352,6 +379,8 @@
             loadData();
         });
 
+        // Initialisation
+        loadAutocompletions();
         loadData();
     </script>
 </body>
