@@ -1,387 +1,217 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Data Mafia Brisage - Saisie & Historique</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Brisage - Dofus</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <style>
+    /* Barre de défilement personnalisée pour les menus déroulants */
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #1e2538;
+      border-radius: 0 8px 8px 0;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #374151;
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #4b5563;
+    }
+  </style>
 </head>
-<body class="bg-gray-900 text-white p-6">
-    <div class="max-w-7xl mx-auto space-y-6">
+<body class="bg-[#0f172a] text-gray-100 min-h-screen p-6">
+
+  <div class="max-w-7xl mx-auto space-y-6">
+
+    <!-- Formulaire : Enregistrer un brisage -->
+    <div class="bg-[#1e293b] border border-gray-800 rounded-xl p-5 shadow-lg">
+      <h2 class="text-amber-400 font-bold text-lg mb-4 flex items-center gap-2">
+        <span class="text-xl">+</span> Enregistrer un brisage
+      </h2>
+
+      <form id="brisage-form" class="grid grid-cols-1 md:grid-cols-4 gap-4">
         
-        <!-- En-tête centré + Navigation -->
-        <div class="bg-gray-800 p-4 rounded-lg border border-amber-500/30 text-center space-y-3">
-            <h1 class="text-3xl font-bold text-amber-400">Data Mafia Brisage</h1>
-            <nav class="flex justify-center gap-2">
-                <a href="/" class="bg-amber-500 text-gray-900 font-bold px-4 py-2 rounded-lg text-sm transition">
-                    📝 Saisie & Historique
-                </a>
-                <a href="/bilan" class="bg-gray-700 hover:bg-gray-600 text-amber-300 font-bold px-4 py-2 rounded-lg text-sm transition">
-                    📊 Bilan & Stats
-                </a>
-                <a href="/items" class="bg-gray-700 hover:bg-gray-600 text-amber-300 font-bold px-4 py-2 rounded-lg text-sm transition">
-                    📦 Historique par Item
-                </a>
-            </nav>
+        <!-- Pseudo -->
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1">Pseudo</label>
+          <input 
+            type="text" 
+            id="player-name" 
+            placeholder="Asudon"
+            class="w-full bg-[#2a3447] text-white text-sm rounded-lg px-3 py-2 border border-gray-700 focus:outline-none focus:border-amber-500 transition-colors"
+          />
         </div>
 
-        <!-- Formulaire d'ajout / modification -->
-        <div class="bg-gray-800 p-5 rounded-lg border border-gray-700 space-y-3">
-            <div class="flex justify-between items-center">
-                <h2 id="form-title" class="text-lg font-bold text-amber-300">➕ Enregistrer un brisage</h2>
-                <button id="cancel-edit-btn" onclick="resetForm()" class="hidden text-xs text-gray-400 hover:text-white underline">Annuler la modification</button>
-            </div>
-            <form id="brisage-form" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <input type="hidden" id="edit_id" value="">
-                
-                <div>
-                    <label class="block text-xs text-gray-300 mb-1">Pseudo</label>
-                    <input type="text" id="pseudo" required placeholder="Ton pseudo..." class="w-full p-2 bg-gray-700 rounded border border-gray-600 focus:outline-none focus:border-amber-400 text-sm">
-                </div>
-
-                <!-- Champ Nom de l'item avec Autocomplétion -->
-                <div>
-                    <label class="block text-xs text-gray-300 mb-1">Nom de l'item</label>
-                    <input type="text" id="item_name" list="items-list" autocomplete="off" required placeholder="Tapez pour chercher..." class="w-full p-2 bg-gray-700 rounded border border-gray-600 focus:outline-none focus:border-amber-400 text-sm">
-                    <datalist id="items-list"></datalist>
-                </div>
-
-                <div>
-                    <label class="block text-xs text-gray-300 mb-1">Catégorie</label>
-                    <select id="category" required class="w-full p-2 bg-gray-700 rounded border border-gray-600 focus:outline-none focus:border-amber-400 text-sm">
-                        <option value="Chapeau">🎩 Chapeau</option>
-                        <option value="Cape">🧥 Cape</option>
-                        <option value="Amulette">📿 Amulette</option>
-                        <option value="Anneau">💍 Anneau</option>
-                        <option value="Ceinture">🎗️ Ceinture</option>
-                        <option value="Bottes">🥾 Bottes</option>
-                        <option value="Arme">⚔️ Arme</option>
-                        <option value="Bouclier">🛡️ Bouclier</option>
-                    </select>
-                </div>
-
-                <!-- Champ Type de brisage avec Autocomplétion -->
-                <div>
-                    <label class="block text-xs text-gray-300 mb-1">Type de brisage</label>
-                    <input type="text" id="break_type" list="break-types-list" autocomplete="off" placeholder="Ex: Do So" required class="w-full p-2 bg-gray-700 rounded border border-gray-600 focus:outline-none focus:border-amber-400 text-sm">
-                    <datalist id="break-types-list"></datalist>
-                </div>
-
-                <div>
-                    <label class="block text-xs text-gray-300 mb-1">Coût du Craft (Kamas)</label>
-                    <input type="number" id="craft_cost" oninput="calculateProfit()" required class="w-full p-2 bg-gray-700 rounded border border-gray-600 focus:outline-none focus:border-amber-400 text-sm">
-                </div>
-                <div>
-                    <label class="block text-xs text-gray-300 mb-1">Coefficient obtenu (%)</label>
-                    <input type="number" step="0.1" id="coeff" required class="w-full p-2 bg-gray-700 rounded border border-gray-600 focus:outline-none focus:border-amber-400 text-sm">
-                </div>
-                <div>
-                    <label class="block text-xs text-gray-300 mb-1">Valeur Runes obtenues (Kamas)</label>
-                    <input type="number" id="runes_value" oninput="calculateProfit()" required class="w-full p-2 bg-gray-700 rounded border border-gray-600 focus:outline-none focus:border-amber-400 text-sm">
-                </div>
-                <div>
-                    <label class="block text-xs text-gray-300 mb-1">Bénéfice estimé (Automatique)</label>
-                    <input type="text" id="kama_profit_display" disabled placeholder="0 K" class="w-full p-2 bg-gray-900 font-bold text-amber-400 rounded border border-gray-700 text-sm cursor-not-allowed">
-                </div>
-                <div class="md:col-span-3">
-                    <label class="block text-xs text-gray-300 mb-1">Date du brisage</label>
-                    <input type="date" id="entry_date" required class="w-full p-2 bg-gray-700 rounded border border-gray-600 focus:outline-none focus:border-amber-400 text-sm">
-                </div>
-                <button type="submit" id="submit-btn" class="md:col-span-1 bg-amber-500 hover:bg-amber-600 text-gray-900 font-bold p-2.5 rounded transition text-sm self-end">
-                    Enregistrer le brisage
-                </button>
-            </form>
+        <!-- Nom de l'item avec Autocomplétion -->
+        <div class="relative w-full" id="item-name-wrapper">
+          <label class="block text-xs font-medium text-gray-400 mb-1">Nom de l'item</label>
+          <div class="relative">
+            <input 
+              type="text" 
+              id="item-name-input" 
+              placeholder="Ex: Masque Ardent"
+              autocomplete="off"
+              class="w-full bg-[#2a3447] text-white text-sm rounded-lg px-3 py-2 border border-gray-700 focus:outline-none focus:border-amber-500 transition-colors placeholder-gray-500"
+            />
+            <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400 text-xs">▼</span>
+          </div>
+          <div 
+            id="item-name-dropdown" 
+            class="hidden absolute z-50 left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-[#1e2538] border border-gray-700 rounded-lg shadow-xl divide-y divide-gray-800/50 custom-scrollbar"
+          ></div>
         </div>
 
-        <!-- Tableau de l'historique -->
-        <div class="bg-gray-800 p-5 rounded-lg space-y-4">
-            <div class="flex flex-col lg:flex-row justify-between items-center gap-4">
-                <h2 class="text-xl font-bold text-amber-300">Historique des brisages</h2>
-                
-                <div class="flex flex-wrap items-center gap-4 text-xs w-full lg:w-auto">
-                    <div class="flex-1 lg:flex-none">
-                        <input type="text" id="search-query" oninput="currentPage = 1; renderTable()" placeholder="🔍 Rechercher item, joueur..." class="w-full lg:w-64 p-1.5 bg-gray-700 rounded border border-gray-600 focus:outline-none focus:border-amber-400 text-white placeholder-gray-400">
-                    </div>
-                    <div>
-                        <select id="filter-category" onchange="currentPage = 1; renderTable()" class="p-1.5 bg-gray-700 rounded border border-gray-600">
-                            <option value="ALL">Toutes catégories</option>
-                            <option value="Chapeau">Chapeau</option>
-                            <option value="Cape">Cape</option>
-                            <option value="Amulette">Amulette</option>
-                            <option value="Anneau">Anneau</option>
-                            <option value="Ceinture">Ceinture</option>
-                            <option value="Bottes">Bottes</option>
-                            <option value="Arme">Arme</option>
-                            <option value="Bouclier">Bouclier</option>
-                        </select>
-                    </div>
-                    <div>
-                        <select id="sort-by" onchange="renderTable()" class="p-1.5 bg-gray-700 rounded border border-gray-600">
-                            <option value="date-desc">Date (Plus récent)</option>
-                            <option value="date-asc">Date (Plus ancien)</option>
-                            <option value="category">Catégorie</option>
-                            <option value="profit-desc">Bénéfice (Décroissant)</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm">
-                    <thead>
-                        <tr class="border-b border-gray-700 text-gray-400 text-xs">
-                            <th class="p-2">Date</th>
-                            <th class="p-2">Joueur</th>
-                            <th class="p-2">Catégorie</th>
-                            <th class="p-2">Item</th>
-                            <th class="p-2">Type</th>
-                            <th class="p-2">Coût Craft</th>
-                            <th class="p-2">Coeff</th>
-                            <th class="p-2">Bénéfice</th>
-                            <th class="p-2 text-center">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="table-body"></tbody>
-                </table>
-            </div>
-
-            <div class="flex justify-between items-center text-xs text-gray-400 pt-2 border-t border-gray-700">
-                <span id="page-info">Page 1 sur 1</span>
-                <div class="flex gap-2">
-                    <button id="btn-prev" onclick="changePage(-1)" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded disabled:opacity-40 disabled:cursor-not-allowed">
-                        ◀ Précédent
-                    </button>
-                    <button id="btn-next" onclick="changePage(1)" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded disabled:opacity-40 disabled:cursor-not-allowed">
-                        Suivant ▶
-                    </button>
-                </div>
-            </div>
+        <!-- Catégorie -->
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1">Catégorie</label>
+          <select id="category-select" class="w-full bg-[#2a3447] text-white text-sm rounded-lg px-3 py-2 border border-gray-700 focus:outline-none focus:border-amber-500 transition-colors">
+            <option value="Chapeau">Chapeau</option>
+            <option value="Cape">Cape</option>
+            <option value="Amulette">Amulette</option>
+            <option value="Anneau">Anneau</option>
+            <option value="Bottes">Bottes</option>
+            <option value="Ceinture">Ceinture</option>
+            <option value="Arme">Arme</option>
+            <option value="Bouclier">Bouclier</option>
+          </select>
         </div>
+
+        <!-- Type de brisage avec Autocomplétion -->
+        <div class="relative w-full" id="break-type-wrapper">
+          <label class="block text-xs font-medium text-gray-400 mb-1">Type de brisage</label>
+          <div class="relative">
+            <input 
+              type="text" 
+              id="break-type-input" 
+              placeholder="Ex: Do So"
+              autocomplete="off"
+              class="w-full bg-[#2a3447] text-white text-sm rounded-lg px-3 py-2 border border-gray-700 focus:outline-none focus:border-amber-500 transition-colors placeholder-gray-500"
+            />
+            <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400 text-xs">▼</span>
+          </div>
+          <div 
+            id="break-type-dropdown" 
+            class="hidden absolute z-50 left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-[#1e2538] border border-gray-700 rounded-lg shadow-xl divide-y divide-gray-800/50 custom-scrollbar"
+          ></div>
+        </div>
+
+        <!-- Coût du Craft -->
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1">Coût du Craft (Kamas)</label>
+          <input type="number" id="craft-cost" class="w-full bg-[#2a3447] text-white text-sm rounded-lg px-3 py-2 border border-gray-700 focus:outline-none focus:border-amber-500 transition-colors" />
+        </div>
+
+        <!-- Coefficient -->
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1">Coefficient obtenu (%)</label>
+          <input type="number" id="coeff" class="w-full bg-[#2a3447] text-white text-sm rounded-lg px-3 py-2 border border-gray-700 focus:outline-none focus:border-amber-500 transition-colors" />
+        </div>
+
+        <!-- Valeur Runes -->
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1">Valeur Runes obtenues (Kamas)</label>
+          <input type="number" id="runes-value" class="w-full bg-[#2a3447] text-white text-sm rounded-lg px-3 py-2 border border-gray-700 focus:outline-none focus:border-amber-500 transition-colors" />
+        </div>
+
+        <!-- Bénéfice (Calculé / Lecture seule) -->
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1">Bénéfice estimé</label>
+          <div class="w-full bg-[#182030] text-gray-300 font-bold text-sm rounded-lg px-3 py-2 border border-gray-800">
+            <span id="estimated-benefit">0 K</span>
+          </div>
+        </div>
+
+        <!-- Date -->
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1">Date du brisage</label>
+          <input type="date" id="break-date" class="w-full bg-[#2a3447] text-white text-sm rounded-lg px-3 py-2 border border-gray-700 focus:outline-none focus:border-amber-500 transition-colors" />
+        </div>
+
+        <!-- Bouton Enregistrer -->
+        <div class="md:col-span-3 flex items-end">
+          <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-gray-900 font-bold py-2 rounded-lg transition-colors shadow-md">
+            Enregistrer
+          </button>
+        </div>
+
+      </form>
     </div>
 
-    <script>
-        let allData = [];
-        let currentPage = 1;
-        const rowsPerPage = 50;
+  </div>
 
-        document.getElementById('entry_date').valueAsDate = new Date();
+  <!-- Script JS d'autocomplétion -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
 
-        const savedPseudo = localStorage.getItem('saved_pseudo');
-        if (savedPseudo) {
-            document.getElementById('pseudo').value = savedPseudo;
-        }
+      function setupAutocomplete(inputId, dropdownId, wrapperId, jsonUrl) {
+        const input = document.getElementById(inputId);
+        const dropdown = document.getElementById(dropdownId);
+        const wrapper = document.getElementById(wrapperId);
 
-        // Chargement des suggestions depuis les fichiers JSON
-        async function loadAutocompletions() {
-            try {
-                // Chargement des items
-                const resItems = await fetch('/static/noms_items.json');
-                const items = await resItems.json();
-                const itemsDatalist = document.getElementById('items-list');
-                itemsDatalist.innerHTML = '';
-                items.forEach(item => {
-                    const option = document.createElement('option');
-                    option.value = typeof item === 'string' ? item : item.name;
-                    itemsDatalist.appendChild(option);
-                });
+        if (!input || !dropdown || !wrapper) return;
 
-                // Chargement des types de brisage / focus
-                const resTypes = await fetch('/static/break_types.json');
-                const breakTypes = await resTypes.json();
-                const typesDatalist = document.getElementById('break-types-list');
-                typesDatalist.innerHTML = '';
-                breakTypes.forEach(type => {
-                    const option = document.createElement('option');
-                    option.value = typeof type === 'string' ? type : type.name;
-                    typesDatalist.appendChild(option);
-                });
-            } catch (err) {
-                console.error("Erreur de chargement des suggestions JSON :", err);
-            }
-        }
+        let itemsList = [];
 
-        function calculateProfit() {
-            const craftCost = parseInt(document.getElementById('craft_cost').value) || 0;
-            const runesValue = parseInt(document.getElementById('runes_value').value) || 0;
-            const profit = runesValue - craftCost;
+        fetch(jsonUrl)
+          .then(res => res.json())
+          .then(data => { itemsList = data; })
+          .catch(err => console.error(`Erreur de chargement (${jsonUrl}):`, err));
 
-            const profitDisplay = document.getElementById('kama_profit_display');
-            profitDisplay.value = `${profit.toLocaleString()} K`;
-            
-            if (profit >= 0) {
-                profitDisplay.className = "w-full p-2 bg-gray-900 font-bold text-green-400 rounded border border-gray-700 text-sm cursor-not-allowed";
-            } else {
-                profitDisplay.className = "w-full p-2 bg-gray-900 font-bold text-red-400 rounded border border-gray-700 text-sm cursor-not-allowed";
-            }
-        }
+        function renderOptions(filterText = "") {
+          dropdown.innerHTML = "";
+          
+          const filtered = itemsList
+            .filter(item => item.toLowerCase().includes(filterText.toLowerCase()))
+            .slice(0, 50);
 
-        async function loadData() {
-            const resData = await fetch('/api/brisage');
-            allData = await resData.json();
-            renderTable();
-        }
+          if (filtered.length === 0) {
+            dropdown.innerHTML = `<div class="px-3 py-2 text-xs text-gray-500">Aucun résultat</div>`;
+            return;
+          }
 
-        function renderTable() {
-            const categoryFilter = document.getElementById('filter-category').value;
-            const sortBy = document.getElementById('sort-by').value;
-            const searchQuery = document.getElementById('search-query').value.toLowerCase().trim();
+          filtered.forEach(itemValue => {
+            const item = document.createElement("div");
+            item.className = "px-3 py-2 text-sm text-gray-200 hover:bg-amber-500/20 hover:text-amber-400 cursor-pointer transition-colors";
+            item.textContent = itemValue;
 
-            let filtered = allData.filter(item => {
-                const matchCategory = categoryFilter === 'ALL' || item.category === categoryFilter;
-                const matchSearch = searchQuery === '' || 
-                                    (item.item_name && item.item_name.toLowerCase().includes(searchQuery)) || 
-                                    (item.pseudo && item.pseudo.toLowerCase().includes(searchQuery)) ||
-                                    (item.break_type && item.break_type.toLowerCase().includes(searchQuery));
-                return matchCategory && matchSearch;
+            item.addEventListener("click", () => {
+              input.value = itemValue;
+              dropdown.classList.add("hidden");
+              input.dispatchEvent(new Event('change'));
             });
 
-            filtered.sort((a, b) => {
-                if (sortBy === 'date-desc') return new Date(b.entry_date) - new Date(a.entry_date);
-                if (sortBy === 'date-asc') return new Date(a.entry_date) - new Date(b.entry_date);
-                if (sortBy === 'category') return a.category.localeCompare(b.category);
-                if (sortBy === 'profit-desc') return b.kama_profit - a.kama_profit;
-                return 0;
-            });
-
-            const totalPages = Math.ceil(filtered.length / rowsPerPage) || 1;
-            if (currentPage > totalPages) currentPage = totalPages;
-            if (currentPage < 1) currentPage = 1;
-
-            const startIndex = (currentPage - 1) * rowsPerPage;
-            const paginatedData = filtered.slice(startIndex, startIndex + rowsPerPage);
-
-            document.getElementById('page-info').innerText = `Page ${currentPage} sur ${totalPages} (${filtered.length} entrées)`;
-            document.getElementById('btn-prev').disabled = currentPage === 1;
-            document.getElementById('btn-next').disabled = currentPage === totalPages;
-
-            const tbody = document.getElementById('table-body');
-            tbody.innerHTML = '';
-
-            if (paginatedData.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9" class="p-4 text-center text-gray-500 italic">Aucun brisage trouvé</td></tr>';
-                return;
-            }
-            
-            paginatedData.forEach(row => {
-                const tr = document.createElement('tr');
-                tr.className = 'border-b border-gray-700 hover:bg-gray-750';
-                const profitClass = row.kama_profit >= 0 ? 'text-green-400' : 'text-red-400';
-                
-                tr.innerHTML = `
-                    <td class="p-2 text-gray-400">${row.entry_date}</td>
-                    <td class="p-2 font-semibold">${row.pseudo}</td>
-                    <td class="p-2"><span class="bg-gray-700 px-2 py-0.5 rounded text-xs">${row.category}</span></td>
-                    <td class="p-2">${row.item_name}</td>
-                    <td class="p-2"><span class="bg-amber-900/40 text-amber-300 px-2 py-0.5 rounded text-xs border border-amber-700/50">${row.break_type || '-'}</span></td>
-                    <td class="p-2">${row.craft_cost.toLocaleString()} K</td>
-                    <td class="p-2">${row.coeff}%</td>
-                    <td class="p-2 ${profitClass}">${row.kama_profit.toLocaleString()} K</td>
-                    <td class="p-2 text-center flex justify-center gap-2">
-                        <button onclick="editItem(${row.id})" class="bg-amber-600 hover:bg-amber-700 text-white px-2 py-1 rounded text-xs transition">
-                            ✏️ Éditer
-                        </button>
-                        <button onclick="deleteItem(${row.id})" class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs transition">
-                            Supprimer
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
+            dropdown.appendChild(item);
+          });
         }
 
-        function editItem(id) {
-            const item = allData.find(d => d.id === id);
-            if (!item) return;
-
-            document.getElementById('edit_id').value = item.id;
-            document.getElementById('pseudo').value = item.pseudo;
-            document.getElementById('item_name').value = item.item_name;
-            document.getElementById('category').value = item.category;
-            document.getElementById('break_type').value = item.break_type || '';
-            document.getElementById('craft_cost').value = item.craft_cost;
-            document.getElementById('coeff').value = item.coeff;
-            
-            document.getElementById('runes_value').value = item.craft_cost + item.kama_profit;
-            document.getElementById('entry_date').value = item.entry_date;
-
-            calculateProfit();
-
-            document.getElementById('form-title').innerText = "✏️ Modifier le brisage";
-            document.getElementById('submit-btn').innerText = "Mettre à jour";
-            document.getElementById('cancel-edit-btn').classList.remove('hidden');
-
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function resetForm() {
-            document.getElementById('edit_id').value = '';
-            document.getElementById('item_name').value = '';
-            document.getElementById('break_type').value = '';
-            document.getElementById('craft_cost').value = '';
-            document.getElementById('coeff').value = '';
-            document.getElementById('runes_value').value = '';
-            document.getElementById('kama_profit_display').value = '';
-            document.getElementById('entry_date').valueAsDate = new Date();
-
-            document.getElementById('form-title').innerText = "➕ Enregistrer un brisage";
-            document.getElementById('submit-btn').innerText = "Enregistrer le brisage";
-            document.getElementById('cancel-edit-btn').classList.add('hidden');
-        }
-
-        function changePage(direction) {
-            currentPage += direction;
-            renderTable();
-        }
-
-        async function deleteItem(id) {
-            if (confirm("Es-tu sûr de vouloir supprimer cette ligne ?")) {
-                await fetch(`/api/brisage/${id}`, { method: 'DELETE' });
-                loadData();
-            }
-        }
-
-        document.getElementById('brisage-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const currentPseudo = document.getElementById('pseudo').value;
-            localStorage.setItem('saved_pseudo', currentPseudo);
-
-            const editId = document.getElementById('edit_id').value;
-            const craftCost = parseInt(document.getElementById('craft_cost').value);
-            const runesValue = parseInt(document.getElementById('runes_value').value);
-            const calculatedProfit = runesValue - craftCost;
-
-            const payload = {
-                pseudo: currentPseudo,
-                item_name: document.getElementById('item_name').value,
-                category: document.getElementById('category').value,
-                break_type: document.getElementById('break_type').value,
-                craft_cost: craftCost,
-                coeff: parseFloat(document.getElementById('coeff').value),
-                kama_profit: calculatedProfit,
-                entry_date: document.getElementById('entry_date').value
-            };
-
-            if (editId) {
-                await fetch(`/api/brisage/${editId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-            } else {
-                await fetch('/api/brisage', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-            }
-
-            resetForm();
-            loadData();
+        input.addEventListener("focus", () => {
+          renderOptions(input.value);
+          dropdown.classList.remove("hidden");
         });
 
-        // Initialisation
-        loadAutocompletions();
-        loadData();
-    </script>
+        input.addEventListener("input", () => {
+          renderOptions(input.value);
+          dropdown.classList.remove("hidden");
+        });
+
+        document.addEventListener("click", (e) => {
+          if (!wrapper.contains(e.target)) {
+            dropdown.classList.add("hidden");
+          }
+        });
+      }
+
+      // Initialisation
+      setupAutocomplete("item-name-input", "item-name-dropdown", "item-name-wrapper", "/static/noms_items.json");
+      setupAutocomplete("break-type-input", "break-type-dropdown", "break-type-wrapper", "/static/break_types.json");
+
+    });
+  </script>
 </body>
 </html>
