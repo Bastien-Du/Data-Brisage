@@ -58,6 +58,7 @@
               type="text" 
               id="player-name" 
               placeholder="Asudon"
+              required
               class="w-full bg-[#20293a] text-white text-sm rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500 transition-colors"
             />
           </div>
@@ -70,6 +71,7 @@
                 id="item-name-input" 
                 placeholder="Ex: Masque Ardent"
                 autocomplete="off"
+                required
                 class="w-full bg-[#20293a] text-white text-sm rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500 transition-colors placeholder-gray-500"
               />
               <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400 text-xs">▼</span>
@@ -102,6 +104,7 @@
                 id="break-type-input" 
                 placeholder="Ex: Do So"
                 autocomplete="off"
+                required
                 class="w-full bg-[#20293a] text-white text-sm rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500 transition-colors placeholder-gray-500"
               />
               <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400 text-xs">▼</span>
@@ -117,22 +120,22 @@
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
             <label class="block text-xs font-medium text-gray-400 mb-1">Coût du Craft (Kamas)</label>
-            <input type="number" id="craft-cost" class="w-full bg-[#20293a] text-white text-sm rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500 transition-colors" />
+            <input type="number" id="craft-cost" required class="w-full bg-[#20293a] text-white text-sm rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500 transition-colors" />
           </div>
 
           <div>
             <label class="block text-xs font-medium text-gray-400 mb-1">Coefficient obtenu (%)</label>
-            <input type="number" id="coeff" class="w-full bg-[#20293a] text-white text-sm rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500 transition-colors" />
+            <input type="number" id="coeff" required class="w-full bg-[#20293a] text-white text-sm rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500 transition-colors" />
           </div>
 
           <div>
             <label class="block text-xs font-medium text-gray-400 mb-1">Valeur Runes obtenues (Kamas)</label>
-            <input type="number" id="runes-value" class="w-full bg-[#20293a] text-white text-sm rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500 transition-colors" />
+            <input type="number" id="runes-value" required class="w-full bg-[#20293a] text-white text-sm rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500 transition-colors" />
           </div>
 
           <div>
             <label class="block text-xs font-medium text-gray-400 mb-1">Bénéfice estimé</label>
-            <div class="w-full bg-[#111622] text-white font-bold text-sm rounded-lg px-3 py-2 border border-gray-800">
+            <div class="w-full bg-[#111622] text-white font-bold text-sm rounded-lg px-3 py-2 border border-gray-800 flex items-center justify-between">
               <span id="estimated-benefit">0 K</span>
             </div>
           </div>
@@ -142,7 +145,7 @@
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 pt-1">
           <div>
             <label class="block text-xs font-medium text-gray-400 mb-1">Date du brisage</label>
-            <input type="date" id="break-date" class="w-full bg-[#20293a] text-white text-sm rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500 transition-colors" />
+            <input type="date" id="break-date" required class="w-full bg-[#20293a] text-white text-sm rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500 transition-colors" />
           </div>
 
           <div class="md:col-span-3 flex items-end">
@@ -232,6 +235,35 @@
   <script>
     document.addEventListener("DOMContentLoaded", () => {
 
+      // Valeur par défaut de la date : aujourd'hui
+      const dateInput = document.getElementById("break-date");
+      if (dateInput && !dateInput.value) {
+        dateInput.value = new Date().toISOString().split('T')[0];
+      }
+
+      // --- CALCUL EN DIRECT DU BÉNÉFICE ---
+      const craftCostInput = document.getElementById("craft-cost");
+      const runesValueInput = document.getElementById("runes-value");
+      const estimatedBenefitEl = document.getElementById("estimated-benefit");
+
+      function updateCalculatedBenefit() {
+        const craftCost = parseFloat(craftCostInput.value) || 0;
+        const runesValue = parseFloat(runesValueInput.value) || 0;
+        const profit = runesValue - craftCost;
+
+        if (profit >= 0) {
+          estimatedBenefitEl.textContent = `+${profit.toLocaleString()} K`;
+          estimatedBenefitEl.className = "text-emerald-400 font-bold";
+        } else {
+          estimatedBenefitEl.textContent = `${profit.toLocaleString()} K`;
+          estimatedBenefitEl.className = "text-red-400 font-bold";
+        }
+      }
+
+      craftCostInput.addEventListener("input", updateCalculatedBenefit);
+      runesValueInput.addEventListener("input", updateCalculatedBenefit);
+
+
       // --- AUTOCOMPLÉTION ---
       function setupAutocomplete(inputId, dropdownId, wrapperId, jsonUrl) {
         const input = document.getElementById(inputId);
@@ -295,7 +327,7 @@
       setupAutocomplete("break-type-input", "break-type-dropdown", "break-type-wrapper", "/static/break_types.json");
 
 
-      // --- GESTION DE L'HISTORIQUE & PAGINATION (50 MAX / PAGE) ---
+      // --- HISTORIQUE & PAGINATION ---
       let allHistoryData = [];
       let currentPage = 1;
       const itemsPerPage = 50;
@@ -356,7 +388,7 @@
             const tr = document.createElement("tr");
             tr.className = "hover:bg-gray-800/30 transition-colors";
 
-            const profit = item.kama_profit || 0;
+            const profit = item.kama_profit !== undefined ? item.kama_profit : ((item.runes_value || 0) - (item.craft_cost || 0));
             const profitClass = profit >= 0 ? "text-emerald-400" : "text-red-400";
             const formattedProfit = (profit >= 0 ? "+" : "") + profit.toLocaleString() + " K";
 
@@ -370,7 +402,6 @@
               <td class="py-3">${item.coeff}%</td>
               <td class="py-3 font-semibold ${profitClass}">${formattedProfit}</td>
               <td class="py-3 text-right space-x-1">
-                <button onclick="editEntry(${item.id})" class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 text-xs font-semibold px-2.5 py-1 rounded transition-colors">Éditer</button>
                 <button onclick="deleteEntry(${item.id})" class="bg-red-500/20 hover:bg-red-500/30 text-red-400 text-xs font-semibold px-2.5 py-1 rounded transition-colors">Supprimer</button>
               </td>
             `;
@@ -378,7 +409,6 @@
           });
         }
 
-        // Mettre à jour les contrôles de pagination
         document.getElementById("pagination-info").textContent = 
           totalItems > 0 
             ? `Affichage de ${startIdx + 1} à ${Math.min(endIdx, totalItems)} sur ${totalItems} brisage${totalItems > 1 ? 's' : ''}`
@@ -389,22 +419,67 @@
         document.getElementById("btn-next-page").disabled = (currentPage >= totalPages);
       }
 
-      // Événements Filtres
+      // --- SOUMISSION DU FORMULAIRE ---
+      const form = document.getElementById("brisage-form");
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const payload = {
+          pseudo: document.getElementById("player-name").value,
+          item_name: document.getElementById("item-name-input").value,
+          category: document.getElementById("category-select").value,
+          break_type: document.getElementById("break-type-input").value,
+          craft_cost: parseFloat(document.getElementById("craft-cost").value) || 0,
+          coeff: parseFloat(document.getElementById("coeff").value) || 0,
+          runes_value: parseFloat(document.getElementById("runes-value").value) || 0,
+          kama_profit: (parseFloat(document.getElementById("runes-value").value) || 0) - (parseFloat(document.getElementById("craft-cost").value) || 0),
+          entry_date: document.getElementById("break-date").value
+        };
+
+        try {
+          const res = await fetch('/api/brisage', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          if (res.ok) {
+            // Recharger la liste et réinitialiser les champs
+            await loadHistory();
+            form.reset();
+            dateInput.value = new Date().toISOString().split('T')[0];
+            estimatedBenefitEl.textContent = "0 K";
+            estimatedBenefitEl.className = "text-white font-bold";
+          } else {
+            alert("Erreur lors de l'enregistrement de l'item.");
+          }
+        } catch (err) {
+          console.error("Erreur serveur :", err);
+          alert("Impossible de contacter le serveur.");
+        }
+      });
+
+      // Suppression d'un brisage
+      window.deleteEntry = async function(id) {
+        if (!confirm("Voulez-vous vraiment supprimer cet enregistrement ?")) return;
+        try {
+          const res = await fetch(`/api/brisage/${id}`, { method: 'DELETE' });
+          if (res.ok) loadHistory();
+        } catch (err) {
+          console.error("Erreur lors de la suppression :", err);
+        }
+      };
+
+      // Filtres & Navigation
       document.getElementById("search-input").addEventListener("input", () => { currentPage = 1; renderTable(); });
       document.getElementById("filter-category").addEventListener("change", () => { currentPage = 1; renderTable(); });
       document.getElementById("filter-date").addEventListener("change", () => { currentPage = 1; renderTable(); });
 
-      // Événements Pagination
       document.getElementById("btn-prev-page").addEventListener("click", () => {
-        if (currentPage > 1) {
-          currentPage--;
-          renderTable();
-        }
+        if (currentPage > 1) { currentPage--; renderTable(); }
       });
-
       document.getElementById("btn-next-page").addEventListener("click", () => {
-        currentPage++;
-        renderTable();
+        currentPage++; renderTable();
       });
 
       loadHistory();
