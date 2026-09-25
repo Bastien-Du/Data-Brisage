@@ -3,12 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Data Brisage - Dofus</title>
-  <!-- Tailwind CSS CDN -->
+  <title>Data Mafia Brisage - Saisie & Historique</title>
   <script src="https://cdn.tailwindcss.com"></script>
   
   <style>
-    /* Barre de défilement personnalisée pour les menus déroulants */
     .custom-scrollbar::-webkit-scrollbar {
       width: 6px;
     }
@@ -29,6 +27,22 @@
 
   <div class="max-w-7xl mx-auto space-y-6">
 
+    <!-- En-tête centré + Navigation -->
+    <div class="bg-[#171e2e] p-4 rounded-xl border border-amber-500/30 text-center space-y-3 shadow-lg">
+      <h1 class="text-3xl font-bold text-amber-400">Data Mafia Brisage</h1>
+      <nav class="flex justify-center gap-2">
+        <a href="/" class="bg-amber-500 text-gray-950 font-bold px-4 py-2 rounded-lg text-sm transition">
+          📝 Saisie & Historique
+        </a>
+        <a href="/bilan" class="bg-[#20293a] hover:bg-gray-700 text-amber-300 font-bold px-4 py-2 rounded-lg text-sm transition border border-gray-700/60">
+          📊 Bilan & Stats
+        </a>
+        <a href="/items" class="bg-[#20293a] hover:bg-gray-700 text-amber-300 font-bold px-4 py-2 rounded-lg text-sm transition border border-gray-700/60">
+          📦 Historique par Item
+        </a>
+      </nav>
+    </div>
+
     <!-- Section 1 : Formulaire "Enregistrer un brisage" -->
     <div class="bg-[#171e2e] border border-gray-800/80 rounded-xl p-5 shadow-lg">
       <h2 class="text-amber-400 font-bold text-lg mb-4 flex items-center gap-2">
@@ -36,9 +50,8 @@
       </h2>
 
       <form id="brisage-form" class="space-y-4">
-        <!-- Ligne 1 du formulaire -->
+        <!-- Ligne 1 -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <!-- Pseudo -->
           <div>
             <label class="block text-xs font-medium text-gray-400 mb-1">Pseudo</label>
             <input 
@@ -49,7 +62,6 @@
             />
           </div>
 
-          <!-- Nom de l'item (Autocomplétion) -->
           <div class="relative w-full" id="item-name-wrapper">
             <label class="block text-xs font-medium text-gray-400 mb-1">Nom de l'item</label>
             <div class="relative">
@@ -68,7 +80,6 @@
             ></div>
           </div>
 
-          <!-- Catégorie -->
           <div>
             <label class="block text-xs font-medium text-gray-400 mb-1">Catégorie</label>
             <select id="category-select" class="w-full bg-[#20293a] text-white text-sm rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500 transition-colors">
@@ -83,7 +94,6 @@
             </select>
           </div>
 
-          <!-- Type de brisage (Autocomplétion) -->
           <div class="relative w-full" id="break-type-wrapper">
             <label class="block text-xs font-medium text-gray-400 mb-1">Type de brisage</label>
             <div class="relative">
@@ -103,27 +113,23 @@
           </div>
         </div>
 
-        <!-- Ligne 2 du formulaire -->
+        <!-- Ligne 2 -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <!-- Coût du Craft -->
           <div>
             <label class="block text-xs font-medium text-gray-400 mb-1">Coût du Craft (Kamas)</label>
             <input type="number" id="craft-cost" class="w-full bg-[#20293a] text-white text-sm rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500 transition-colors" />
           </div>
 
-          <!-- Coefficient obtenu -->
           <div>
             <label class="block text-xs font-medium text-gray-400 mb-1">Coefficient obtenu (%)</label>
             <input type="number" id="coeff" class="w-full bg-[#20293a] text-white text-sm rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500 transition-colors" />
           </div>
 
-          <!-- Valeur Runes -->
           <div>
             <label class="block text-xs font-medium text-gray-400 mb-1">Valeur Runes obtenues (Kamas)</label>
             <input type="number" id="runes-value" class="w-full bg-[#20293a] text-white text-sm rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500 transition-colors" />
           </div>
 
-          <!-- Bénéfice estimé -->
           <div>
             <label class="block text-xs font-medium text-gray-400 mb-1">Bénéfice estimé</label>
             <div class="w-full bg-[#111622] text-white font-bold text-sm rounded-lg px-3 py-2 border border-gray-800">
@@ -132,15 +138,13 @@
           </div>
         </div>
 
-        <!-- Ligne 3 du formulaire -->
+        <!-- Ligne 3 -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 pt-1">
-          <!-- Date -->
           <div>
             <label class="block text-xs font-medium text-gray-400 mb-1">Date du brisage</label>
             <input type="date" id="break-date" class="w-full bg-[#20293a] text-white text-sm rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500 transition-colors" />
           </div>
 
-          <!-- Bouton Enregistrer (occupe 3 colonnes) -->
           <div class="md:col-span-3 flex items-end">
             <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-gray-950 font-bold py-2 rounded-lg transition-colors shadow-md text-sm">
               Enregistrer
@@ -152,16 +156,12 @@
 
     <!-- Section 2 : Historique des brisages -->
     <div class="bg-[#171e2e] border border-gray-800/80 rounded-xl p-5 shadow-lg space-y-4">
-      
-      <!-- En-tête de la section Historique -->
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <h2 class="text-amber-400 font-bold text-lg">
           Historique des brisages
         </h2>
 
-        <!-- Barres de recherche et Filtres -->
         <div class="flex flex-wrap items-center gap-2">
-          <!-- Recherche -->
           <div class="relative">
             <input 
               type="text" 
@@ -172,7 +172,6 @@
             <span class="absolute left-2.5 top-2 text-gray-400 text-xs">🔍</span>
           </div>
 
-          <!-- Filtre Catégorie -->
           <select id="filter-category" class="bg-[#20293a] text-xs text-white rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500">
             <option value="all">Toutes catégories</option>
             <option value="Chapeau">Chapeau</option>
@@ -180,7 +179,6 @@
             <option value="Amulette">Amulette</option>
           </select>
 
-          <!-- Filtre Trie par Date -->
           <select id="filter-date" class="bg-[#20293a] text-xs text-white rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500">
             <option value="desc">Date (Plus récent)</option>
             <option value="asc">Date (Plus ancien)</option>
@@ -188,7 +186,6 @@
         </div>
       </div>
 
-      <!-- Tableau d'historique -->
       <div class="overflow-x-auto">
         <table class="w-full text-left text-sm text-gray-300">
           <thead class="text-xs text-gray-400 border-b border-gray-800">
@@ -205,7 +202,6 @@
             </tr>
           </thead>
           <tbody id="history-tbody" class="divide-y divide-gray-800/60">
-            <!-- Exemple d'enregistrement 1 -->
             <tr class="hover:bg-gray-800/30 transition-colors">
               <td class="py-3 text-xs text-gray-400">2026-09-25</td>
               <td class="py-3 font-medium text-white">Kebab</td>
@@ -220,50 +216,15 @@
                 <button class="bg-red-500/20 hover:bg-red-500/30 text-red-400 text-xs font-semibold px-2.5 py-1 rounded transition-colors">Supprimer</button>
               </td>
             </tr>
-
-            <!-- Exemple d'enregistrement 2 -->
-            <tr class="hover:bg-gray-800/30 transition-colors">
-              <td class="py-3 text-xs text-gray-400">2026-09-25</td>
-              <td class="py-3 font-medium text-white">Kebab</td>
-              <td class="py-3"><span class="bg-[#20293a] text-gray-300 text-xs px-2.5 py-1 rounded">Bottes</span></td>
-              <td class="py-3 font-medium text-white">Pikottes</td>
-              <td class="py-3"><span class="bg-amber-500/10 text-amber-500 border border-amber-500/30 text-xs font-semibold px-2 py-0.5 rounded">Do So</span></td>
-              <td class="py-3">1 800 000 K</td>
-              <td class="py-3">451%</td>
-              <td class="py-3 font-semibold text-emerald-400">626 947 K</td>
-              <td class="py-3 text-right space-x-1">
-                <button class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 text-xs font-semibold px-2.5 py-1 rounded transition-colors">Éditer</button>
-                <button class="bg-red-500/20 hover:bg-red-500/30 text-red-400 text-xs font-semibold px-2.5 py-1 rounded transition-colors">Supprimer</button>
-              </td>
-            </tr>
-
-            <!-- Exemple d'enregistrement 3 -->
-            <tr class="hover:bg-gray-800/30 transition-colors">
-              <td class="py-3 text-xs text-gray-400">2026-09-25</td>
-              <td class="py-3 font-medium text-white">Kebab</td>
-              <td class="py-3"><span class="bg-[#20293a] text-gray-300 text-xs px-2.5 py-1 rounded">Amulette</span></td>
-              <td class="py-3 font-medium text-white">Talisman Igans</td>
-              <td class="py-3"><span class="bg-amber-500/10 text-amber-500 border border-amber-500/30 text-xs font-semibold px-2 py-0.5 rounded">Do So</span></td>
-              <td class="py-3">2 600 000 K</td>
-              <td class="py-3">648%</td>
-              <td class="py-3 font-semibold text-emerald-400">733 417 K</td>
-              <td class="py-3 text-right space-x-1">
-                <button class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 text-xs font-semibold px-2.5 py-1 rounded transition-colors">Éditer</button>
-                <button class="bg-red-500/20 hover:bg-red-500/30 text-red-400 text-xs font-semibold px-2.5 py-1 rounded transition-colors">Supprimer</button>
-              </td>
-            </tr>
           </tbody>
         </table>
       </div>
-
     </div>
 
   </div>
 
-  <!-- Script JS d'autocomplétion dynamique -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-
       function setupAutocomplete(inputId, dropdownId, wrapperId, jsonUrl) {
         const input = document.getElementById(inputId);
         const dropdown = document.getElementById(dropdownId);
@@ -273,13 +234,11 @@
 
         let itemsList = [];
 
-        // Récupération des données depuis le fichier JSON
         fetch(jsonUrl)
           .then(res => res.json())
           .then(data => { itemsList = data; })
           .catch(err => console.error(`Erreur de chargement (${jsonUrl}):`, err));
 
-        // Rendu des suggestions
         function renderOptions(filterText = "") {
           dropdown.innerHTML = "";
           
@@ -307,7 +266,6 @@
           });
         }
 
-        // Événements
         input.addEventListener("focus", () => {
           renderOptions(input.value);
           dropdown.classList.remove("hidden");
@@ -325,10 +283,8 @@
         });
       }
 
-      // Initialisation pour "Nom de l'item" et "Type de brisage"
       setupAutocomplete("item-name-input", "item-name-dropdown", "item-name-wrapper", "/static/noms_items.json");
       setupAutocomplete("break-type-input", "break-type-dropdown", "break-type-wrapper", "/static/break_types.json");
-
     });
   </script>
 </body>
