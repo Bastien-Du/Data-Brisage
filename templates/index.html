@@ -85,14 +85,14 @@
           <div>
             <label class="block text-xs font-medium text-gray-400 mb-1">Catégorie</label>
             <select id="category-select" class="w-full bg-[#20293a] text-white text-sm rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500 transition-colors">
-              <option value="Chapeau">Chapeau</option>
-              <option value="Cape">Cape</option>
               <option value="Amulette">Amulette</option>
               <option value="Anneau">Anneau</option>
-              <option value="Bottes">Bottes</option>
-              <option value="Ceinture">Ceinture</option>
               <option value="Arme">Arme</option>
+              <option value="Bottes">Bottes</option>
               <option value="Bouclier">Bouclier</option>
+              <option value="Cape">Cape</option>
+              <option value="Ceinture">Ceinture</option>
+              <option value="Chapeau">Chapeau</option>
             </select>
           </div>
 
@@ -177,14 +177,14 @@
 
           <select id="filter-category" class="bg-[#20293a] text-xs text-white rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500">
             <option value="all">Toutes catégories</option>
-            <option value="Chapeau">Chapeau</option>
-            <option value="Cape">Cape</option>
             <option value="Amulette">Amulette</option>
             <option value="Anneau">Anneau</option>
-            <option value="Bottes">Bottes</option>
-            <option value="Ceinture">Ceinture</option>
             <option value="Arme">Arme</option>
+            <option value="Bottes">Bottes</option>
             <option value="Bouclier">Bouclier</option>
+            <option value="Cape">Cape</option>
+            <option value="Ceinture">Ceinture</option>
+            <option value="Chapeau">Chapeau</option>
           </select>
 
           <!-- Sélecteur de tri étendu -->
@@ -262,14 +262,14 @@
           <div>
             <label class="block text-xs font-medium text-gray-400 mb-1">Catégorie</label>
             <select id="edit-category" class="w-full bg-[#20293a] text-white text-sm rounded-lg px-3 py-2 border border-gray-700/60 focus:outline-none focus:border-amber-500">
-              <option value="Chapeau">Chapeau</option>
-              <option value="Cape">Cape</option>
               <option value="Amulette">Amulette</option>
               <option value="Anneau">Anneau</option>
-              <option value="Bottes">Bottes</option>
-              <option value="Ceinture">Ceinture</option>
               <option value="Arme">Arme</option>
+              <option value="Bottes">Bottes</option>
               <option value="Bouclier">Bouclier</option>
+              <option value="Cape">Cape</option>
+              <option value="Ceinture">Ceinture</option>
+              <option value="Chapeau">Chapeau</option>
             </select>
           </div>
           <div>
@@ -350,7 +350,6 @@
         fetch(jsonUrl)
           .then(res => res.json())
           .then(data => { 
-            // Tri par ordre alphabétique
             itemsList = data.sort((a, b) => a.localeCompare(b, 'fr')); 
           })
           .catch(err => console.error(`Erreur de chargement (${jsonUrl}):`, err));
@@ -432,14 +431,12 @@
           return matchSearch && matchCat;
         });
 
-        // Calcul des bénéfices explicites pour chaque élément pour le tri
         filtered.forEach(item => {
           if (item.kama_profit === undefined) {
             item.kama_profit = (item.runes_value || 0) - (item.craft_cost || 0);
           }
         });
 
-        // Application du tri selon l'option sélectionnée
         filtered.sort((a, b) => {
           switch (sortBy) {
             case "date-asc":
@@ -571,7 +568,7 @@
         document.getElementById("edit-id").value = item.id;
         document.getElementById("edit-pseudo").value = item.pseudo || "";
         document.getElementById("edit-item-name").value = item.item_name || "";
-        document.getElementById("edit-category").value = item.category || "Chapeau";
+        document.getElementById("edit-category").value = item.category || "Amulette";
         document.getElementById("edit-break-type").value = item.break_type || "";
         document.getElementById("edit-craft-cost").value = item.craft_cost || 0;
         document.getElementById("edit-coeff").value = item.coeff || 0;
